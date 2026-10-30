@@ -1,5 +1,9 @@
 package cz.mediaoptimizer.ui.home
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -21,7 +25,10 @@ import cz.mediaoptimizer.ui.components.HeroCard
 import cz.mediaoptimizer.ui.theme.MediaOptimizerTheme
 
 @Composable
-fun HomeScreen(onPickMedia: () -> Unit) {
+fun HomeScreen(onMediaPicked: (List<Uri>) -> Unit) {
+    val picker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickMultipleVisualMedia(),
+    ) { uris -> if (uris.isNotEmpty()) onMediaPicked(uris) }
     Scaffold { padding ->
         Column(
             modifier = Modifier
@@ -52,7 +59,11 @@ fun HomeScreen(onPickMedia: () -> Unit) {
             }
             BigPrimaryButton(
                 text = stringResource(R.string.home_pick_media),
-                onClick = onPickMedia,
+                onClick = {
+                    picker.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo),
+                    )
+                },
             )
             Spacer(Modifier.height(12.dp))
             Text(
@@ -67,5 +78,5 @@ fun HomeScreen(onPickMedia: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 private fun HomePreview() {
-    MediaOptimizerTheme { HomeScreen(onPickMedia = {}) }
+    MediaOptimizerTheme { HomeScreen(onMediaPicked = {}) }
 }

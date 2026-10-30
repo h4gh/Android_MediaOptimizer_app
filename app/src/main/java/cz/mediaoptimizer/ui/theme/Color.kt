@@ -30,3 +30,9 @@ val TealDarkOutline = Color(0xFF3F4948)
 // "Saved" highlight
 val TealLightGood = Color(0xFF2E7D32)
 val TealDarkGood = Color(0xFF8BD88F)
+
+// Selected chips / segmented buttons
+val TealLightSelected = Color(0xFFB4E9E5)
+val TealLightOnSelected = Color(0xFF00201F)
+val TealDarkSelected = Color(0xFF1F4E4B)
+val TealDarkOnSelected = Color(0xFFB4F1EC)
