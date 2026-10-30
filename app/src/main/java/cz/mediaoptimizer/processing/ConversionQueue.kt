@@ -5,6 +5,7 @@ import cz.mediaoptimizer.domain.model.ConversionResult
 import cz.mediaoptimizer.domain.model.ConversionSettings
 import cz.mediaoptimizer.domain.model.MediaItem
 import cz.mediaoptimizer.domain.model.MediaType
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
@@ -33,6 +34,9 @@ class ConversionQueue(private val context: Context) {
                     try {
                         withContext(Dispatchers.IO) { images.convert(item, settings, out) }
                         ConversionResult(item, out, out.length())
+                    } catch (e: CancellationException) {
+                        out.delete()
+                        throw e
                     } catch (e: Exception) {
                         out.delete()
                         ConversionResult(item, null, 0, error = e.message ?: e.javaClass.simpleName)
