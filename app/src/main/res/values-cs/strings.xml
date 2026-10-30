@@ -12,6 +12,7 @@
     <string name="setup_loading">Načítám soubory…</string>
     <string name="setup_empty">Nic není vybráno</string>
     <string name="remove">Odebrat</string>
+    <string name="setup_add_more">Přidat další</string>
     <plurals name="photos">
         <item quantity="one">%d fotka</item>
         <item quantity="few">%d fotky</item>

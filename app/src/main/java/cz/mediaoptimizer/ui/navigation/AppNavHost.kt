@@ -49,6 +49,7 @@ fun AppNavHost(media: MediaViewModel) {
             SetupScreen(
                 state = state,
                 onRemove = media::remove,
+                onAdd = media::add,
                 onBack = { nav.popBackStack() },
                 onOptimize = { settings ->
                     media.convert(settings)

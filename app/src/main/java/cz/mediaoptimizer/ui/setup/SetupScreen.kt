@@ -1,6 +1,12 @@
 package cz.mediaoptimizer.ui.setup
 
+import android.net.Uri
 import android.text.format.Formatter
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,6 +51,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
@@ -67,10 +75,14 @@ import cz.mediaoptimizer.ui.theme.HeroNumberStyle
 fun SetupScreen(
     state: MediaSelectionState,
     onRemove: (MediaItem) -> Unit,
+    onAdd: (List<Uri>) -> Unit,
     onBack: () -> Unit,
     onOptimize: (ConversionSettings) -> Unit,
 ) {
     val context = LocalContext.current
+    val picker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickMultipleVisualMedia(),
+    ) { uris -> if (uris.isNotEmpty()) onAdd(uris) }
     var preset by rememberSaveable { mutableIntStateOf(1) }
     var stripMetadata by rememberSaveable { mutableStateOf(true) }
     var removeAudio by rememberSaveable { mutableStateOf(false) }
@@ -144,7 +156,7 @@ fun SetupScreen(
                 }
 
                 Spacer(Modifier.height(20.dp))
-                if (state.loading) {
+                if (state.loading && state.items.isEmpty()) {
                     Box(Modifier.fillMaxWidth().height(110.dp), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
@@ -152,6 +164,16 @@ fun SetupScreen(
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(state.items, key = { it.uri.toString() }) { item ->
                             MediaTile(item, onRemove = { onRemove(item) })
+                        }
+                        item(key = "add") {
+                            AddTile(
+                                loading = state.loading,
+                                onClick = {
+                                    picker.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo),
+                                    )
+                                },
+                            )
                         }
                     }
                 }
@@ -219,6 +241,37 @@ fun SetupScreen(
             )
             Spacer(Modifier.height(8.dp))
         }
+    }
+}
+
+@Composable
+private fun AddTile(loading: Boolean, onClick: () -> Unit) {
+    Column(Modifier.width(88.dp)) {
+        Box(
+            modifier = Modifier
+                .size(88.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .border(2.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
+                .clickable(enabled = !loading, onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (loading) {
+                CircularProgressIndicator(Modifier.size(28.dp))
+            } else {
+                Icon(
+                    Icons.Filled.Add,
+                    contentDescription = stringResource(R.string.setup_add_more),
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(32.dp),
+                )
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = stringResource(R.string.setup_add_more),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
     }
 }
 

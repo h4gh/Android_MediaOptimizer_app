@@ -13,6 +13,7 @@
     <string name="setup_loading">Reading files…</string>
     <string name="setup_empty">No files selected</string>
     <string name="remove">Remove</string>
+    <string name="setup_add_more">Add more</string>
     <plurals name="photos">
         <item quantity="one">%d photo</item>
         <item quantity="other">%d photos</item>

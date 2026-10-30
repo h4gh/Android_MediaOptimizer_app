@@ -83,6 +83,26 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Adds more media to the current selection; already selected files are skipped. */
+    fun add(uris: List<Uri>) {
+        val known = _state.value.items.map { it.uri }.toSet()
+        val fresh = uris.distinct().filter { it !in known }
+        if (fresh.isEmpty()) return
+        val id = selectionId
+        _state.update { it.copy(loading = true) }
+        viewModelScope.launch {
+            val items = withContext(Dispatchers.IO) { fresh.mapNotNull(reader::read) }
+            if (id != selectionId) return@launch
+            _state.update {
+                it.copy(
+                    items = it.items + items.filter { n -> it.items.none { o -> o.uri == n.uri } },
+                    loading = false,
+                    skipped = it.skipped + fresh.size - items.size,
+                )
+            }
+        }
+    }
+
     fun remove(item: MediaItem) {
         _state.update { s -> s.copy(items = s.items - item) }
     }
