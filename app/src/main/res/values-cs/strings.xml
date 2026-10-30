@@ -104,4 +104,8 @@
     <string name="settings_default_size">Velikost</string>
     <string name="settings_strip_hint">Platí při každém spuštění; u každé dávky to jde ještě změnit.</string>
     <string name="settings_theme_amoled">AMOLED</string>
+    <string name="settings_icon">Ikona aplikace</string>
+    <string name="settings_icon_hint">Na ploše se nová ikona může objevit až po pár sekundách.</string>
+    <string name="icon_light">Světlá</string>
+    <string name="icon_night">Noční</string>
 </resources>

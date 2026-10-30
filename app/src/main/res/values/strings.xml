@@ -99,4 +99,8 @@
     <string name="settings_default_size">Size</string>
     <string name="settings_strip_hint">Turned on when you open the app; you can still change it for each batch.</string>
     <string name="settings_theme_amoled">AMOLED</string>
+    <string name="settings_icon">App icon</string>
+    <string name="settings_icon_hint">The home screen may take a few seconds to show the new icon.</string>
+    <string name="icon_light">Light</string>
+    <string name="icon_night">Night</string>
 </resources>

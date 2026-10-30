@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher icon foreground: savings ring around a small landscape photo -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:pathData="M54,34.56 A19.44,19.44 0 1,1 54,73.44 A19.44,19.44 0 1,1 54,34.56" android:strokeColor="#FFECEFF4" android:strokeWidth="5.76" />
+    <path android:pathData="M54,34.56 A19.44,19.44 0 0,1 73.10,57.64" android:strokeColor="#FFFF5A5F" android:strokeWidth="5.76" android:strokeLineCap="round" />
+    <path android:pathData="M48.24,43.92 H59.76 A4.32,4.32 0 0,1 64.08,48.24 V59.76 A4.32,4.32 0 0,1 59.76,64.08 H48.24 A4.32,4.32 0 0,1 43.92,59.76 V48.24 A4.32,4.32 0 0,1 48.24,43.92 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="54" android:startY="43.92" android:endX="54" android:endY="64.08"
+                android:startColor="#FF64B5F6" android:endColor="#FFBBDEFB" />
+        </aapt:attr>
+    </path>
+    <path android:pathData="M55.61,49.97 A2.42,2.42 0 1,1 60.45,49.97 A2.42,2.42 0 1,1 55.61,49.97 Z" android:fillColor="#FFFFCA28" />
+    <path android:pathData="M43.92,58.44 Q49.56,54.00 54.00,57.63 T64.08,56.42 V59.76 A4.32,4.32 0 0,1 59.76,64.08 H48.24 A4.32,4.32 0 0,1 43.92,59.76 Z" android:fillColor="#FF43A047" />
+    <path android:pathData="M54,18.6 A35.4,35.4 0 1,1 54,89.4 A35.4,35.4 0 1,1 54,18.6" android:strokeColor="#59000000" android:strokeWidth="1.2" />
+</vector>

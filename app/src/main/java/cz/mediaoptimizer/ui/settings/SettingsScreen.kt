@@ -1,5 +1,6 @@
 package cz.mediaoptimizer.ui.settings
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,6 +40,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -47,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import cz.mediaoptimizer.BuildConfig
 import cz.mediaoptimizer.R
 import cz.mediaoptimizer.data.AppColor
+import cz.mediaoptimizer.data.AppIcon
 import cz.mediaoptimizer.data.AppLanguage
 import cz.mediaoptimizer.data.AppSettings
 import cz.mediaoptimizer.data.ThemeMode
@@ -107,6 +112,27 @@ fun SettingsScreen(
                         )
                     }
             }
+
+            Label(stringResource(R.string.settings_icon))
+            var icon by remember { mutableStateOf(AppIcon.current(context)) }
+            Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                AppIcon.entries.forEach { option ->
+                    IconChoice(
+                        icon = option,
+                        selected = icon == option,
+                        onClick = {
+                            icon = option
+                            AppIcon.set(context, option)
+                        },
+                    )
+                }
+            }
+            Text(
+                stringResource(R.string.settings_icon_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp),
+            )
 
             if (AppLanguage.supported) {
                 Section(stringResource(R.string.settings_language))
@@ -185,6 +211,36 @@ private fun Segmented(labels: List<String>, selected: Int, onSelect: (Int) -> Un
                 shape = SegmentedButtonDefaults.itemShape(index, labels.size),
             ) { Text(label, maxLines = 1) }
         }
+    }
+}
+
+@Composable
+private fun IconChoice(icon: AppIcon, selected: Boolean, onClick: () -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable(onClick = onClick)) {
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .border(
+                    3.dp,
+                    if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.background,
+                    CircleShape,
+                )
+                .padding(5.dp)
+                .clip(CircleShape),
+        ) {
+            // Launcher layers are 108 dp with the visible part in the middle 72 dp
+            Image(painterResource(icon.background), null, Modifier.matchParentSize(), contentScale = ContentScale.FillBounds)
+            Image(
+                painterResource(icon.foreground),
+                null,
+                Modifier.matchParentSize().scale(1.5f),
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            stringResource(if (icon == AppIcon.LIGHT) R.string.icon_light else R.string.icon_night),
+            style = MaterialTheme.typography.labelMedium,
+        )
     }
 }
 

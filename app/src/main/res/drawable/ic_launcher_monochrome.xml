@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed icon (Android 13+): single colour silhouette -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:pathData="M54,34.56 A19.44,19.44 0 0,1 73.10,57.64" android:strokeColor="#FF000000" android:strokeWidth="5.76" android:strokeLineCap="round" />
+    <path android:pathData="M48.24,43.92 H59.76 A4.32,4.32 0 0,1 64.08,48.24 V59.76 A4.32,4.32 0 0,1 59.76,64.08 H48.24 A4.32,4.32 0 0,1 43.92,59.76 V48.24 A4.32,4.32 0 0,1 48.24,43.92 Z" android:fillColor="#FF000000" />
+</vector>
