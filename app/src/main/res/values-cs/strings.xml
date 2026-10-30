@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello_title">Ahoj!</string>
+    <string name="hello_body">Aplikace běží. Další krok: kostra aplikace.</string>
+    <string name="version_label">Verze %1$s</string>
+</resources>

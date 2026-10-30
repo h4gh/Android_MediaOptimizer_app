@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Media Optimizer</string>
+    <string name="hello_title">Hello!</string>
+    <string name="hello_body">The app runs. Next step: app skeleton.</string>
+    <string name="version_label">Version %1$s</string>
+</resources>
