@@ -73,7 +73,10 @@ fun AppNavHost(media: MediaViewModel) {
         composable(Routes.RESULT) {
             ResultScreen(
                 state = conversion,
-                onDone = { nav.popBackStack(Routes.HOME, inclusive = false) },
+                onDone = {
+                    nav.popBackStack(Routes.HOME, inclusive = false)
+                    media.finish()
+                },
             )
         }
     }

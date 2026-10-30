@@ -1,6 +1,7 @@
 package cz.mediaoptimizer.processing
 
 import android.content.Context
+import cz.mediaoptimizer.data.CacheManager
 import cz.mediaoptimizer.domain.model.ConversionResult
 import cz.mediaoptimizer.domain.model.ConversionSettings
 import cz.mediaoptimizer.domain.model.MediaItem
@@ -12,7 +13,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /** Converts a batch one file at a time into cache/out/<batch>/. */
-class ConversionQueue(private val context: Context) {
+class ConversionQueue(context: Context, private val cache: CacheManager) {
     private val images = ImageProcessor(context)
 
     suspend fun run(
@@ -20,9 +21,7 @@ class ConversionQueue(private val context: Context) {
         settings: ConversionSettings,
         onProgress: (done: Int, result: ConversionResult) -> Unit,
     ): List<ConversionResult> = withContext(Dispatchers.Default) {
-        val outRoot = File(context.cacheDir, "out")
-        outRoot.deleteRecursively()
-        val dir = File(outRoot, System.currentTimeMillis().toString()).apply { mkdirs() }
+        val dir = cache.newBatchDir()
         val usedNames = mutableSetOf<String>()
 
         items.mapIndexed { index, item ->

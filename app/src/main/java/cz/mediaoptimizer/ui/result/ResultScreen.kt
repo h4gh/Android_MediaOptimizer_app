@@ -25,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cz.mediaoptimizer.R
+import cz.mediaoptimizer.data.ShareHelper
 import cz.mediaoptimizer.domain.model.ConversionResult
 import cz.mediaoptimizer.ui.components.BigPrimaryButton
 import cz.mediaoptimizer.ui.components.HeroCard
@@ -33,7 +34,6 @@ import cz.mediaoptimizer.ui.media.MediaThumbnail
 import cz.mediaoptimizer.ui.theme.HeroNumberStyle
 import cz.mediaoptimizer.ui.theme.LocalGoodColor
 
-// Sharing arrives in Part 4.
 @Composable
 fun ResultScreen(state: ConversionState, onDone: () -> Unit) {
     BackHandler(onBack = onDone)
@@ -80,7 +80,14 @@ fun ResultScreen(state: ConversionState, onDone: () -> Unit) {
                 items(state.results, key = { it.source.uri.toString() }) { ResultRow(it) }
             }
             Spacer(Modifier.height(12.dp))
-            BigPrimaryButton(text = stringResource(R.string.result_share), onClick = {}, enabled = false)
+            val chooserTitle = stringResource(R.string.result_share)
+            BigPrimaryButton(
+                text = chooserTitle,
+                onClick = {
+                    ShareHelper.share(context, state.converted.mapNotNull { it.outputFile }, chooserTitle)
+                },
+                enabled = state.converted.isNotEmpty(),
+            )
             Spacer(Modifier.height(8.dp))
             OutlinedButton(onClick = onDone, modifier = Modifier.fillMaxWidth().height(52.dp)) {
                 Text(stringResource(R.string.result_done))

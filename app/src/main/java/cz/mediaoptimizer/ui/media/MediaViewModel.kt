@@ -4,6 +4,7 @@ import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import cz.mediaoptimizer.data.CacheManager
 import cz.mediaoptimizer.data.MediaInfoReader
 import cz.mediaoptimizer.domain.model.ConversionResult
 import cz.mediaoptimizer.domain.model.ConversionSettings
@@ -42,7 +43,10 @@ data class ConversionState(
 /** Holds the selected media and the running conversion; shared by all screens. */
 class MediaViewModel(app: Application) : AndroidViewModel(app) {
     private val reader = MediaInfoReader(app)
-    private val queue = ConversionQueue(app)
+    private val cache = CacheManager(app).also { c ->
+        viewModelScope.launch(Dispatchers.IO) { c.clearOld() }
+    }
+    private val queue = ConversionQueue(app, cache)
     private var conversionJob: Job? = null
 
     private val _state = MutableStateFlow(MediaSelectionState())
@@ -88,5 +92,13 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
     fun cancelConversion() {
         conversionJob?.cancel()
         _conversion.value = ConversionState()
+        viewModelScope.launch(Dispatchers.IO) { cache.clearAll() }
+    }
+
+    /** Leaving the result: converted copies are no longer needed. */
+    fun finish() {
+        _conversion.value = ConversionState()
+        _state.value = MediaSelectionState(shareCount = _state.value.shareCount)
+        viewModelScope.launch(Dispatchers.IO) { cache.clearAll() }
     }
 }

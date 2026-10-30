@@ -169,6 +169,13 @@ fun SetupScreen(
                     }
                 }
 
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.setup_preset_hint_photo, Preset.entries[preset].imageMaxSide),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
                 Spacer(Modifier.height(20.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(
