@@ -5,10 +5,10 @@
 Android app that shrinks photos and videos so you can send them by e-mail, WhatsApp and other messengers. Select files in the gallery, share them to the app, pick a size and share the light copies on. Your originals stay untouched and everything runs offline on the phone.
 
 <p align="center">
-  <img src="docs/screenshots/home.png" width="200" alt="Home screen">
-  <img src="docs/screenshots/setup.png" width="200" alt="Choosing the size">
-  <img src="docs/screenshots/result.png" width="200" alt="Result">
-  <img src="docs/screenshots/settings.png" width="200" alt="Settings">
+  <img src="docs/screenshots/home.png" width="220" alt="Home screen">
+  <img src="docs/screenshots/setup.png" width="220" alt="Choosing the size">
+  <img src="docs/screenshots/result.png" width="220" alt="Result">
+  <img src="docs/screenshots/settings.png" width="220" alt="Settings">
 </p>
 
 ## Features
@@ -24,9 +24,8 @@ Android app that shrinks photos and videos so you can send them by e-mail, Whats
 - **Your look** – light, dark, AMOLED or system theme; Teal, Tangerine, Cobalt or wallpaper colours; English or Czech; light or night app icon.
 
 <p align="center">
-  <img src="docs/screenshots/options.png" width="200" alt="More options">
-  <img src="docs/screenshots/trim.png" width="200" alt="Video trimming">
-  <img src="docs/screenshots/dark.png" width="200" alt="Dark theme">
+  <img src="docs/screenshots/options.png" width="220" alt="More options">
+  <img src="docs/screenshots/trim.png" width="220" alt="Video trimming">
 </p>
 
 ## Install

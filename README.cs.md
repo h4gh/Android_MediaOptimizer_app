@@ -5,10 +5,10 @@
 Android aplikace, která zmenší fotky a videa, abyste je mohli poslat e-mailem, přes WhatsApp a další aplikace. Označte soubory v galerii, sdílejte je do aplikace, zvolte velikost a lehké kopie pošlete dál. Originály zůstávají nedotčené a vše běží offline v telefonu.
 
 <p align="center">
-  <img src="docs/screenshots/home.png" width="200" alt="Úvodní obrazovka">
-  <img src="docs/screenshots/setup.png" width="200" alt="Výběr velikosti">
-  <img src="docs/screenshots/result.png" width="200" alt="Výsledek">
-  <img src="docs/screenshots/settings.png" width="200" alt="Nastavení">
+  <img src="docs/screenshots/home.png" width="220" alt="Úvodní obrazovka">
+  <img src="docs/screenshots/setup.png" width="220" alt="Výběr velikosti">
+  <img src="docs/screenshots/result.png" width="220" alt="Výsledek">
+  <img src="docs/screenshots/settings.png" width="220" alt="Nastavení">
 </p>
 
 ## Funkce
@@ -24,9 +24,8 @@ Android aplikace, která zmenší fotky a videa, abyste je mohli poslat e-mailem
 - **Podle vás** – světlý, tmavý, AMOLED nebo systémový motiv; barvy Teal, Tangerine, Cobalt nebo podle tapety; angličtina nebo čeština; světlá nebo noční ikona.
 
 <p align="center">
-  <img src="docs/screenshots/options.png" width="200" alt="Další možnosti">
-  <img src="docs/screenshots/trim.png" width="200" alt="Oříznutí videa">
-  <img src="docs/screenshots/dark.png" width="200" alt="Tmavý motiv">
+  <img src="docs/screenshots/options.png" width="220" alt="Další možnosti">
+  <img src="docs/screenshots/trim.png" width="220" alt="Oříznutí videa">
 </p>
 
 ## Instalace
