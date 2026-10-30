@@ -2,6 +2,7 @@ package cz.mediaoptimizer.processing
 
 import android.content.Context
 import androidx.annotation.OptIn
+import androidx.media3.common.Effect
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.Presentation
@@ -54,10 +55,16 @@ class VideoProcessor(private val context: Context) {
     ) = withContext(Dispatchers.Main) {
         val preset = settings.preset
         val inputShortSide = min(item.width, item.height)
-        val videoEffects = buildList {
-            // Never upscale; Presentation keeps the aspect ratio for portrait and landscape
+        val videoEffects = buildList<Effect> {
+            // Never upscale. Width follows from the aspect ratio; for portrait the short side is the width.
             if (inputShortSide == 0 || inputShortSide > preset.videoShortSide) {
-                add(Presentation.createForShortSide(preset.videoShortSide))
+                val target = preset.videoShortSide
+                val height = if (item.height > item.width && item.width > 0) {
+                    (item.height.toLong() * target / item.width).toInt()
+                } else {
+                    target
+                }
+                add(Presentation.createForHeight(height / 2 * 2))
             }
         }
         val edited = EditedMediaItem.Builder(androidx.media3.common.MediaItem.fromUri(item.uri))
