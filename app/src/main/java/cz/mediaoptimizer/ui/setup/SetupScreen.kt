@@ -96,7 +96,7 @@ fun SetupScreen(
         stripMetadata = stripMetadata,
         removeAudio = removeAudio,
     )
-    val estimates = state.items.associate { it.uri to SizeEstimator.estimate(it, settings, state.bytesPerPixel) }
+    val estimates = state.items.associate { it.uri to SizeEstimator.estimate(it, settings, state.calibration) }
     val estimatedTotal = estimates.values.sum()
 
     Scaffold(

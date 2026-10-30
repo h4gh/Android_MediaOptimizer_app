@@ -38,6 +38,23 @@ class SizeEstimatorTest {
     }
 
     @Test
+    fun `less detailed photo than the samples gets a smaller estimate`() {
+        // Samples: 0.2 B/px originals giving 0.12 B/px copies
+        val calibration = PhotoCalibration(mapOf(Preset.MEDIUM to 0.12f), sourceBytesPerPixel = 0.2f)
+        // This original has 0.1 B/px, half as dense
+        val bpp = SizeEstimator.photoBytesPerPixel(Preset.MEDIUM, 1_200_000, 4000, 3000, calibration)
+        assertEquals(0.06f, bpp, 0.0001f)
+    }
+
+    @Test
+    fun `without calibration the default is used`() {
+        assertEquals(
+            SizeEstimator.DEFAULT_BYTES_PER_PIXEL.getValue(Preset.SMALL),
+            SizeEstimator.photoBytesPerPixel(Preset.SMALL, 1_000_000, 4000, 3000, null),
+        )
+    }
+
+    @Test
     fun `saved percent`() {
         assertEquals(86, SizeEstimator.savedPercent(7_800_000, 1_092_000))
         assertEquals(0, SizeEstimator.savedPercent(0, 100))

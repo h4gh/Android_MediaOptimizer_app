@@ -8,6 +8,15 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
+/**
+ * Measured on sample photos of the batch: output JPEG bytes per pixel for each preset,
+ * and how densely the samples' originals were compressed (bytes per source pixel).
+ */
+data class PhotoCalibration(
+    val bytesPerPixel: Map<Preset, Float>,
+    val sourceBytesPerPixel: Float,
+)
+
 /** Predicts output sizes before converting (TECH_DESIGN §8). */
 object SizeEstimator {
     const val AUDIO_BITRATE = 128_000
@@ -38,13 +47,31 @@ object SizeEstimator {
         return (bitsPerSecond.toDouble() * durationMs / 1000 / 8 * CONTAINER_OVERHEAD).toLong()
     }
 
-    fun estimate(item: MediaItem, settings: ConversionSettings, bytesPerPixel: Map<Preset, Float>): Long =
+    /**
+     * A photo whose original is more detailed (more bytes per pixel) than the samples
+     * will also give a bigger copy, so the calibrated value is scaled by that ratio.
+     */
+    fun photoBytesPerPixel(
+        preset: Preset,
+        sourceBytes: Long,
+        width: Int,
+        height: Int,
+        calibration: PhotoCalibration?,
+    ): Float {
+        val base = calibration?.bytesPerPixel?.get(preset) ?: return DEFAULT_BYTES_PER_PIXEL.getValue(preset)
+        val pixels = width.toLong() * height
+        if (pixels <= 0 || sourceBytes <= 0 || calibration.sourceBytesPerPixel <= 0f) return base
+        val ratio = (sourceBytes.toFloat() / pixels) / calibration.sourceBytesPerPixel
+        return base * ratio.coerceIn(0.4f, 2.5f)
+    }
+
+    fun estimate(item: MediaItem, settings: ConversionSettings, calibration: PhotoCalibration?): Long =
         when (item.type) {
             MediaType.IMAGE -> estimateImage(
                 item.width,
                 item.height,
                 settings.preset,
-                bytesPerPixel[settings.preset] ?: DEFAULT_BYTES_PER_PIXEL.getValue(settings.preset),
+                photoBytesPerPixel(settings.preset, item.sizeBytes, item.width, item.height, calibration),
             )
             MediaType.VIDEO -> estimateVideo(item.durationMs ?: 0, settings.preset, settings.removeAudio)
         }

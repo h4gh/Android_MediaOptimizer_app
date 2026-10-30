@@ -8,6 +8,7 @@ import cz.mediaoptimizer.data.CacheManager
 import cz.mediaoptimizer.data.MediaInfoReader
 import cz.mediaoptimizer.domain.model.ConversionResult
 import cz.mediaoptimizer.domain.model.ConversionSettings
+import cz.mediaoptimizer.domain.estimate.PhotoCalibration
 import cz.mediaoptimizer.domain.estimate.SizeEstimator
 import cz.mediaoptimizer.domain.model.MediaItem
 import cz.mediaoptimizer.domain.model.MediaType
@@ -30,8 +31,8 @@ data class MediaSelectionState(
     val skipped: Int = 0,
     /** Increases whenever media arrive from the Android share sheet. */
     val shareCount: Int = 0,
-    /** JPEG bytes per pixel measured on sample photos, per preset (empty = use defaults). */
-    val bytesPerPixel: Map<Preset, Float> = emptyMap(),
+    /** Measured on sample photos; null until ready (defaults are used meanwhile). */
+    val calibration: PhotoCalibration? = null,
 )
 
 data class ConversionState(
@@ -87,7 +88,7 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
             val items = withContext(Dispatchers.IO) { distinct.mapNotNull(reader::read) }
             if (id != selectionId) return@launch
             _state.update {
-                it.copy(items = items, loading = false, skipped = distinct.size - items.size, bytesPerPixel = emptyMap())
+                it.copy(items = items, loading = false, skipped = distinct.size - items.size, calibration = null)
             }
             calibrate()
         }
@@ -110,7 +111,7 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
                     skipped = it.skipped + fresh.size - items.size,
                 )
             }
-            if (_state.value.bytesPerPixel.isEmpty()) calibrate()
+            if (_state.value.calibration == null) calibrate()
         }
     }
 
@@ -126,7 +127,10 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
                     .takeIf { it.isNotEmpty() }?.average()?.toFloat()
                     ?: SizeEstimator.DEFAULT_BYTES_PER_PIXEL.getValue(preset)
             }
-            if (id == selectionId) _state.update { it.copy(bytesPerPixel = measured) }
+            val sourceDensity = samples.map { it.sizeBytes.toDouble() / (it.width.toLong() * it.height).coerceAtLeast(1) }
+                .average().toFloat()
+            val calibration = PhotoCalibration(measured, sourceDensity)
+            if (id == selectionId) _state.update { it.copy(calibration = calibration) }
         }
     }
 

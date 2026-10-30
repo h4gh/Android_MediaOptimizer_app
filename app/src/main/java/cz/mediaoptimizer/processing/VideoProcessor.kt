@@ -1,6 +1,7 @@
 package cz.mediaoptimizer.processing
 
 import android.content.Context
+import android.media.MediaCodecInfo
 import androidx.annotation.OptIn
 import androidx.media3.common.Effect
 import androidx.media3.common.MimeTypes
@@ -38,11 +39,11 @@ class VideoProcessor(private val context: Context) {
         onProgress: (Float) -> Unit,
     ) {
         try {
-            export(item, settings, outFile, toneMapHdr = true, onProgress)
+            export(item, settings, outFile, strict = true, onProgress)
         } catch (e: ExportException) {
-            // Some phones cannot tone-map HDR to SDR: try once more without it
+            // Some phones cannot tone-map HDR to SDR or keep a constant bitrate: retry without both
             outFile.delete()
-            export(item, settings, outFile, toneMapHdr = false, onProgress)
+            export(item, settings, outFile, strict = false, onProgress)
         }
     }
 
@@ -50,7 +51,7 @@ class VideoProcessor(private val context: Context) {
         item: MediaItem,
         settings: ConversionSettings,
         outFile: File,
-        toneMapHdr: Boolean,
+        strict: Boolean,
         onProgress: (Float) -> Unit,
     ) = withContext(Dispatchers.Main) {
         val preset = settings.preset
@@ -72,12 +73,16 @@ class VideoProcessor(private val context: Context) {
             .setEffects(Effects(emptyList(), videoEffects))
             .build()
         val composition = Composition.Builder(EditedMediaItemSequence(edited))
-            .apply { if (toneMapHdr) setHdrMode(Composition.HDR_MODE_TONE_MAP_HDR_TO_SDR_USING_OPEN_GL) }
+            .apply { if (strict) setHdrMode(Composition.HDR_MODE_TONE_MAP_HDR_TO_SDR_USING_OPEN_GL) }
             .build()
 
         val encoderFactory = DefaultEncoderFactory.Builder(context)
             .setRequestedVideoEncoderSettings(
-                VideoEncoderSettings.Builder().setBitrate(preset.videoBitrate).build(),
+                VideoEncoderSettings.Builder()
+                    .setBitrate(preset.videoBitrate)
+                    // Constant bitrate: variable mode overshoots a lot at low bitrates on some phones
+                    .apply { if (strict) setBitrateMode(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR) }
+                    .build(),
             )
             .build()
 
