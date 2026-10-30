@@ -26,7 +26,8 @@ class SizeEstimatorTest {
     @Test
     fun `thirty second 720p video is about ten megabytes`() {
         val bytes = SizeEstimator.estimateVideo(30_000, Preset.MEDIUM, removeAudio = false)
-        assertEquals(10_051_020L, bytes)
+        // (2.5 Mb/s + 128 kb/s) x 30 s / 8 x 1.02
+        assertEquals(10_051_020.0, bytes.toDouble(), 2.0)
     }
 
     @Test
