@@ -8,7 +8,9 @@ import android.graphics.ImageDecoder
 import androidx.exifinterface.media.ExifInterface
 import cz.mediaoptimizer.domain.model.ConversionSettings
 import cz.mediaoptimizer.domain.model.MediaItem
+import cz.mediaoptimizer.domain.model.Preset
 import java.io.File
+import java.io.OutputStream
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -16,7 +18,32 @@ import kotlin.math.roundToInt
 class ImageProcessor(private val context: Context) {
 
     fun convert(item: MediaItem, settings: ConversionSettings, outFile: File) {
-        val maxSide = settings.preset.imageMaxSide
+        val bitmap = decodeForJpeg(item, settings.preset.imageMaxSide)
+        try {
+            outFile.outputStream().use { out ->
+                check(bitmap.compress(Bitmap.CompressFormat.JPEG, settings.preset.imageQuality, out)) {
+                    "JPEG compression failed"
+                }
+            }
+        } finally {
+            bitmap.recycle()
+        }
+        if (!settings.stripMetadata) copyExif(item, outFile)
+    }
+
+    /** Compresses one photo in memory and returns the JPEG bytes per pixel (for size estimates). */
+    fun sampleBytesPerPixel(item: MediaItem, preset: Preset): Float {
+        val bitmap = decodeForJpeg(item, preset.imageMaxSide)
+        try {
+            val counter = CountingOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.JPEG, preset.imageQuality, counter)
+            return counter.count.toFloat() / (bitmap.width.toLong() * bitmap.height)
+        } finally {
+            bitmap.recycle()
+        }
+    }
+
+    private fun decodeForJpeg(item: MediaItem, maxSide: Int): Bitmap {
         val source = ImageDecoder.createSource(context.contentResolver, item.uri)
         val decoded = ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
             val w = info.size.width
@@ -40,16 +67,13 @@ class ImageProcessor(private val context: Context) {
         } else {
             decoded
         }
-        try {
-            outFile.outputStream().use { out ->
-                check(bitmap.compress(Bitmap.CompressFormat.JPEG, settings.preset.imageQuality, out)) {
-                    "JPEG compression failed"
-                }
-            }
-        } finally {
-            bitmap.recycle()
-        }
-        if (!settings.stripMetadata) copyExif(item, outFile)
+        return bitmap
+    }
+
+    private class CountingOutputStream : OutputStream() {
+        var count = 0L
+        override fun write(b: Int) { count++ }
+        override fun write(b: ByteArray, off: Int, len: Int) { count += len }
     }
 
     /** Copies the useful EXIF tags; orientation stays "normal" because pixels are already rotated. */

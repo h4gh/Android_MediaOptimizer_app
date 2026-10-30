@@ -66,4 +66,5 @@ dependencies {
     implementation(libs.androidx.media3.effect)
     implementation(libs.androidx.media3.common)
     debugImplementation(libs.androidx.ui.tooling)
+    testImplementation(libs.junit)
 }

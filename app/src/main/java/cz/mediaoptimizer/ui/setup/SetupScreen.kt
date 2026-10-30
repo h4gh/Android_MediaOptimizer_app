@@ -59,6 +59,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cz.mediaoptimizer.R
+import cz.mediaoptimizer.domain.estimate.SizeEstimator
 import cz.mediaoptimizer.domain.model.ConversionSettings
 import cz.mediaoptimizer.domain.model.MediaItem
 import cz.mediaoptimizer.domain.model.MediaType
@@ -68,8 +69,8 @@ import cz.mediaoptimizer.ui.components.HeroCard
 import cz.mediaoptimizer.ui.media.MediaSelectionState
 import cz.mediaoptimizer.ui.media.MediaThumbnail
 import cz.mediaoptimizer.ui.theme.HeroNumberStyle
+import cz.mediaoptimizer.ui.theme.LocalGoodColor
 
-// Size estimates ("—") arrive in Part 6.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SetupScreen(
@@ -90,6 +91,13 @@ fun SetupScreen(
     val photos = state.items.count { it.type == MediaType.IMAGE }
     val videos = state.items.size - photos
     val totalBytes = state.items.sumOf { it.sizeBytes }
+    val settings = ConversionSettings(
+        preset = Preset.entries[preset],
+        stripMetadata = stripMetadata,
+        removeAudio = removeAudio,
+    )
+    val estimates = state.items.associate { it.uri to SizeEstimator.estimate(it, settings, state.bytesPerPixel) }
+    val estimatedTotal = estimates.values.sum()
 
     Scaffold(
         topBar = {
@@ -119,7 +127,7 @@ fun SetupScreen(
             ) {
                 HeroCard {
                     Text(
-                        text = stringResource(R.string.setup_original_label),
+                        text = stringResource(R.string.setup_estimate_label),
                         style = MaterialTheme.typography.labelMedium,
                     )
                     Spacer(Modifier.height(4.dp))
@@ -127,17 +135,24 @@ fun SetupScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
+                        val ready = !state.loading && state.items.isNotEmpty()
                         Text(
-                            text = if (state.loading) "…" else Formatter.formatShortFileSize(context, totalBytes),
+                            text = if (ready) "~" + Formatter.formatShortFileSize(context, estimatedTotal) else "…",
                             style = HeroNumberStyle,
                         )
-                        Text("— %", style = HeroNumberStyle, color = MaterialTheme.colorScheme.secondary)
+                        Text(
+                            text = if (ready) "−${SizeEstimator.savedPercent(totalBytes, estimatedTotal)} %" else "— %",
+                            style = HeroNumberStyle,
+                            color = MaterialTheme.colorScheme.secondary,
+                        )
                     }
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = when {
                             state.loading -> stringResource(R.string.setup_loading)
                             else -> listOfNotNull(
+                                stringResource(R.string.setup_from_size, Formatter.formatShortFileSize(context, totalBytes))
+                                    .takeIf { state.items.isNotEmpty() },
                                 pluralStringResource(R.plurals.photos, photos, photos).takeIf { photos > 0 },
                                 pluralStringResource(R.plurals.videos, videos, videos).takeIf { videos > 0 },
                             ).joinToString(" · ").ifEmpty { stringResource(R.string.setup_empty) }
@@ -163,7 +178,7 @@ fun SetupScreen(
                 } else {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(state.items, key = { it.uri.toString() }) { item ->
-                            MediaTile(item, onRemove = { onRemove(item) })
+                            MediaTile(item, estimates[item.uri] ?: 0, onRemove = { onRemove(item) })
                         }
                         item(key = "add") {
                             AddTile(
@@ -229,13 +244,7 @@ fun SetupScreen(
             BigPrimaryButton(
                 text = stringResource(R.string.setup_optimize),
                 onClick = {
-                    onOptimize(
-                        ConversionSettings(
-                            preset = Preset.entries[preset],
-                            stripMetadata = stripMetadata,
-                            removeAudio = removeAudio,
-                        ),
-                    )
+                    onOptimize(settings)
                 },
                 enabled = !state.loading && state.items.isNotEmpty(),
             )
@@ -276,7 +285,7 @@ private fun AddTile(loading: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun MediaTile(item: MediaItem, onRemove: () -> Unit) {
+private fun MediaTile(item: MediaItem, estimate: Long, onRemove: () -> Unit) {
     val context = LocalContext.current
     Column(Modifier.width(88.dp)) {
         Box {
@@ -300,6 +309,12 @@ private fun MediaTile(item: MediaItem, onRemove: () -> Unit) {
         Text(
             text = Formatter.formatShortFileSize(context, item.sizeBytes),
             style = MaterialTheme.typography.labelMedium,
+        )
+        Text(
+            text = "→ ~" + Formatter.formatShortFileSize(context, estimate),
+            style = MaterialTheme.typography.labelMedium,
+            color = LocalGoodColor.current,
+            maxLines = 1,
         )
         Text(
             text = "${item.width}×${item.height}",

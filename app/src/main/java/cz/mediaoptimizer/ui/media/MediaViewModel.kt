@@ -8,7 +8,11 @@ import cz.mediaoptimizer.data.CacheManager
 import cz.mediaoptimizer.data.MediaInfoReader
 import cz.mediaoptimizer.domain.model.ConversionResult
 import cz.mediaoptimizer.domain.model.ConversionSettings
+import cz.mediaoptimizer.domain.estimate.SizeEstimator
 import cz.mediaoptimizer.domain.model.MediaItem
+import cz.mediaoptimizer.domain.model.MediaType
+import cz.mediaoptimizer.domain.model.Preset
+import cz.mediaoptimizer.processing.ImageProcessor
 import cz.mediaoptimizer.processing.ConversionQueue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -26,6 +30,8 @@ data class MediaSelectionState(
     val skipped: Int = 0,
     /** Increases whenever media arrive from the Android share sheet. */
     val shareCount: Int = 0,
+    /** JPEG bytes per pixel measured on sample photos, per preset (empty = use defaults). */
+    val bytesPerPixel: Map<Preset, Float> = emptyMap(),
 )
 
 data class ConversionState(
@@ -49,6 +55,8 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.IO) { c.clearOld() }
     }
     private val queue = ConversionQueue(app, cache)
+    private val images = ImageProcessor(app)
+    private var calibrationJob: Job? = null
     private var conversionJob: Job? = null
 
     private val _state = MutableStateFlow(MediaSelectionState())
@@ -64,6 +72,7 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
     fun select(uris: List<Uri>, fromShare: Boolean = false) {
         if (uris.isEmpty()) return
         val id = ++selectionId
+        calibrationJob?.cancel()
         resetConversion()
         _state.update {
             it.copy(
@@ -78,8 +87,9 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
             val items = withContext(Dispatchers.IO) { distinct.mapNotNull(reader::read) }
             if (id != selectionId) return@launch
             _state.update {
-                it.copy(items = items, loading = false, skipped = distinct.size - items.size)
+                it.copy(items = items, loading = false, skipped = distinct.size - items.size, bytesPerPixel = emptyMap())
             }
+            calibrate()
         }
     }
 
@@ -100,6 +110,23 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
                     skipped = it.skipped + fresh.size - items.size,
                 )
             }
+            if (_state.value.bytesPerPixel.isEmpty()) calibrate()
+        }
+    }
+
+    /** Test-compresses up to two photos in memory so photo estimates match this batch. */
+    private fun calibrate() {
+        calibrationJob?.cancel()
+        val samples = _state.value.items.filter { it.type == MediaType.IMAGE }.take(2)
+        if (samples.isEmpty()) return
+        val id = selectionId
+        calibrationJob = viewModelScope.launch(Dispatchers.Default) {
+            val measured = Preset.entries.associateWith { preset ->
+                samples.mapNotNull { runCatching { images.sampleBytesPerPixel(it, preset) }.getOrNull() }
+                    .takeIf { it.isNotEmpty() }?.average()?.toFloat()
+                    ?: SizeEstimator.DEFAULT_BYTES_PER_PIXEL.getValue(preset)
+            }
+            if (id == selectionId) _state.update { it.copy(bytesPerPixel = measured) }
         }
     }
 

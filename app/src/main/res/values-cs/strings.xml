@@ -8,7 +8,8 @@
     <string name="home_pick_media">Vybrat média</string>
 
     <string name="setup_title">Nastavení</string>
-    <string name="setup_original_label">Vybráno nyní · ušetří se</string>
+    <string name="setup_estimate_label">Odhad velikosti · úspora</string>
+    <string name="setup_from_size">z %1$s</string>
     <string name="setup_loading">Načítám soubory…</string>
     <string name="setup_empty">Nic není vybráno</string>
     <string name="remove">Odebrat</string>

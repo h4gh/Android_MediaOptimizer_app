@@ -20,8 +20,8 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Build debug APK
-        run: ./gradlew assembleDebug -PversionCode=${{ github.run_number }}
+      - name: Build debug APK and run unit tests
+        run: ./gradlew testDebugUnitTest assembleDebug -PversionCode=${{ github.run_number }}
 
       - name: Rename APK
         run: cp app/build/outputs/apk/debug/app-debug.apk MediaOptimizer-${{ github.run_number }}.apk

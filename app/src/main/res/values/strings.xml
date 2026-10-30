@@ -9,7 +9,8 @@
     <string name="home_pick_media">Select media</string>
 
     <string name="setup_title">Settings</string>
-    <string name="setup_original_label">Selected now · will save</string>
+    <string name="setup_estimate_label">Estimated size · saved</string>
+    <string name="setup_from_size">from %1$s</string>
     <string name="setup_loading">Reading files…</string>
     <string name="setup_empty">No files selected</string>
     <string name="remove">Remove</string>

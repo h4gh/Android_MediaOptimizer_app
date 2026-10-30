@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cz.mediaoptimizer.R
 import cz.mediaoptimizer.data.ShareHelper
+import cz.mediaoptimizer.domain.estimate.SizeEstimator
 import cz.mediaoptimizer.domain.model.ConversionResult
 import cz.mediaoptimizer.ui.components.BigPrimaryButton
 import cz.mediaoptimizer.ui.components.HeroCard
@@ -38,7 +39,7 @@ import cz.mediaoptimizer.ui.theme.LocalGoodColor
 fun ResultScreen(state: ConversionState, onDone: () -> Unit) {
     BackHandler(onBack = onDone)
     val context = LocalContext.current
-    val saved = if (state.beforeBytes > 0) 100 - (state.afterBytes * 100 / state.beforeBytes) else 0
+    val saved = SizeEstimator.savedPercent(state.beforeBytes, state.afterBytes)
     Scaffold { padding ->
         Column(
             modifier = Modifier
