@@ -55,8 +55,14 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
     private val _conversion = MutableStateFlow(ConversionState())
     val conversion: StateFlow<ConversionState> = _conversion.asStateFlow()
 
+    // Each selection / conversion gets an id so late updates from an older one are ignored.
+    private var selectionId = 0
+    @Volatile private var batchId = 0
+
     fun select(uris: List<Uri>, fromShare: Boolean = false) {
         if (uris.isEmpty()) return
+        val id = ++selectionId
+        resetConversion()
         _state.update {
             it.copy(
                 items = emptyList(),
@@ -66,9 +72,11 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
             )
         }
         viewModelScope.launch {
-            val items = withContext(Dispatchers.IO) { uris.distinct().mapNotNull(reader::read) }
+            val distinct = uris.distinct()
+            val items = withContext(Dispatchers.IO) { distinct.mapNotNull(reader::read) }
+            if (id != selectionId) return@launch
             _state.update {
-                it.copy(items = items, loading = false, skipped = uris.distinct().size - items.size)
+                it.copy(items = items, loading = false, skipped = distinct.size - items.size)
             }
         }
     }
@@ -78,26 +86,39 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun convert(settings: ConversionSettings) {
+        if (_conversion.value.running) return // double tap
         val items = _state.value.items
-        conversionJob?.cancel()
+        resetConversion()
+        val id = batchId
         _conversion.value = ConversionState(running = true, total = items.size)
         conversionJob = viewModelScope.launch {
             val results = queue.run(items, settings) { done, result ->
-                _conversion.update { it.copy(done = done, results = it.results + result) }
+                _conversion.update {
+                    if (id != batchId) it else it.copy(done = done, results = it.results + result)
+                }
             }
-            _conversion.update { it.copy(running = false, finished = true, results = results) }
+            _conversion.update {
+                if (id != batchId) it else it.copy(running = false, finished = true, results = results)
+            }
         }
     }
 
-    fun cancelConversion() {
+    private fun resetConversion() {
+        batchId++
         conversionJob?.cancel()
+        conversionJob = null
         _conversion.value = ConversionState()
+    }
+
+    fun cancelConversion() {
+        resetConversion()
         viewModelScope.launch(Dispatchers.IO) { cache.clearAll() }
     }
 
     /** Leaving the result: converted copies are no longer needed. */
     fun finish() {
-        _conversion.value = ConversionState()
+        resetConversion()
+        selectionId++
         _state.value = MediaSelectionState(shareCount = _state.value.shareCount)
         viewModelScope.launch(Dispatchers.IO) { cache.clearAll() }
     }
