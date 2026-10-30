@@ -39,4 +39,9 @@
     <string name="result_after">After</string>
     <string name="result_share">Share</string>
     <string name="result_done">Back to start</string>
+    <string name="result_video_later">Videos will be supported soon</string>
+    <string name="result_error">Failed: %1$s</string>
+    <string name="progress_title">Optimizing</string>
+    <string name="progress_count">%1$d of %2$d files</string>
+    <string name="cancel">Cancel</string>
 </resources>

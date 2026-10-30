@@ -51,22 +51,24 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cz.mediaoptimizer.R
+import cz.mediaoptimizer.domain.model.ConversionSettings
 import cz.mediaoptimizer.domain.model.MediaItem
 import cz.mediaoptimizer.domain.model.MediaType
+import cz.mediaoptimizer.domain.model.Preset
 import cz.mediaoptimizer.ui.components.BigPrimaryButton
 import cz.mediaoptimizer.ui.components.HeroCard
 import cz.mediaoptimizer.ui.media.MediaSelectionState
 import cz.mediaoptimizer.ui.media.MediaThumbnail
 import cz.mediaoptimizer.ui.theme.HeroNumberStyle
 
-// Estimates ("—") arrive in Part 6; presets start doing something in Part 3.
+// Size estimates ("—") arrive in Part 6.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SetupScreen(
     state: MediaSelectionState,
     onRemove: (MediaItem) -> Unit,
     onBack: () -> Unit,
-    onOptimize: () -> Unit,
+    onOptimize: (ConversionSettings) -> Unit,
 ) {
     val context = LocalContext.current
     var preset by rememberSaveable { mutableIntStateOf(1) }
@@ -188,7 +190,15 @@ fun SetupScreen(
             Spacer(Modifier.height(12.dp))
             BigPrimaryButton(
                 text = stringResource(R.string.setup_optimize),
-                onClick = onOptimize,
+                onClick = {
+                    onOptimize(
+                        ConversionSettings(
+                            preset = Preset.entries[preset],
+                            stripMetadata = stripMetadata,
+                            removeAudio = removeAudio,
+                        ),
+                    )
+                },
                 enabled = !state.loading && state.items.isNotEmpty(),
             )
             Spacer(Modifier.height(8.dp))

@@ -9,12 +9,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import cz.mediaoptimizer.ui.home.HomeScreen
 import cz.mediaoptimizer.ui.media.MediaViewModel
+import cz.mediaoptimizer.ui.progress.ProgressScreen
 import cz.mediaoptimizer.ui.result.ResultScreen
 import cz.mediaoptimizer.ui.setup.SetupScreen
 
 object Routes {
     const val HOME = "home"
     const val SETUP = "setup"
+    const val PROGRESS = "progress"
     const val RESULT = "result"
 }
 
@@ -22,6 +24,7 @@ object Routes {
 fun AppNavHost(media: MediaViewModel) {
     val nav = rememberNavController()
     val state by media.state.collectAsStateWithLifecycle()
+    val conversion by media.conversion.collectAsStateWithLifecycle()
 
     // Media arrived from the share sheet: jump straight to Setup.
     LaunchedEffect(state.shareCount) {
@@ -47,11 +50,29 @@ fun AppNavHost(media: MediaViewModel) {
                 state = state,
                 onRemove = media::remove,
                 onBack = { nav.popBackStack() },
-                onOptimize = { nav.navigate(Routes.RESULT) },
+                onOptimize = { settings ->
+                    media.convert(settings)
+                    nav.navigate(Routes.PROGRESS)
+                },
+            )
+        }
+        composable(Routes.PROGRESS) {
+            LaunchedEffect(conversion.finished) {
+                if (conversion.finished) {
+                    nav.navigate(Routes.RESULT) { popUpTo(Routes.SETUP) }
+                }
+            }
+            ProgressScreen(
+                state = conversion,
+                onCancel = {
+                    media.cancelConversion()
+                    nav.popBackStack()
+                },
             )
         }
         composable(Routes.RESULT) {
             ResultScreen(
+                state = conversion,
                 onDone = { nav.popBackStack(Routes.HOME, inclusive = false) },
             )
         }

@@ -5,8 +5,12 @@ import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import cz.mediaoptimizer.data.MediaInfoReader
+import cz.mediaoptimizer.domain.model.ConversionResult
+import cz.mediaoptimizer.domain.model.ConversionSettings
 import cz.mediaoptimizer.domain.model.MediaItem
+import cz.mediaoptimizer.processing.ConversionQueue
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,11 +27,29 @@ data class MediaSelectionState(
     val shareCount: Int = 0,
 )
 
-/** Holds the selected media; shared by all screens of the activity. */
+data class ConversionState(
+    val running: Boolean = false,
+    val finished: Boolean = false,
+    val done: Int = 0,
+    val total: Int = 0,
+    val results: List<ConversionResult> = emptyList(),
+) {
+    val converted get() = results.filter { it.outputFile != null }
+    val beforeBytes get() = converted.sumOf { it.source.sizeBytes }
+    val afterBytes get() = converted.sumOf { it.outputBytes }
+}
+
+/** Holds the selected media and the running conversion; shared by all screens. */
 class MediaViewModel(app: Application) : AndroidViewModel(app) {
     private val reader = MediaInfoReader(app)
+    private val queue = ConversionQueue(app)
+    private var conversionJob: Job? = null
+
     private val _state = MutableStateFlow(MediaSelectionState())
     val state: StateFlow<MediaSelectionState> = _state.asStateFlow()
+
+    private val _conversion = MutableStateFlow(ConversionState())
+    val conversion: StateFlow<ConversionState> = _conversion.asStateFlow()
 
     fun select(uris: List<Uri>, fromShare: Boolean = false) {
         if (uris.isEmpty()) return
@@ -49,5 +71,22 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
 
     fun remove(item: MediaItem) {
         _state.update { s -> s.copy(items = s.items - item) }
+    }
+
+    fun convert(settings: ConversionSettings) {
+        val items = _state.value.items
+        conversionJob?.cancel()
+        _conversion.value = ConversionState(running = true, total = items.size)
+        conversionJob = viewModelScope.launch {
+            val results = queue.run(items, settings) { done, result ->
+                _conversion.update { it.copy(done = done, results = it.results + result) }
+            }
+            _conversion.update { it.copy(running = false, finished = true, results = results) }
+        }
+    }
+
+    fun cancelConversion() {
+        conversionJob?.cancel()
+        _conversion.value = ConversionState()
     }
 }

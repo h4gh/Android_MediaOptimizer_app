@@ -44,4 +44,9 @@
     <string name="result_after">Po</string>
     <string name="result_share">Sdílet</string>
     <string name="result_done">Zpět na začátek</string>
+    <string name="result_video_later">Videa budou podporována brzy</string>
+    <string name="result_error">Chyba: %1$s</string>
+    <string name="progress_title">Optimalizuji</string>
+    <string name="progress_count">%1$d z %2$d souborů</string>
+    <string name="cancel">Zrušit</string>
 </resources>
