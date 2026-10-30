@@ -67,6 +67,16 @@ fun ResultScreen(state: ConversionState, onDone: () -> Unit) {
                 Text(stringResource(R.string.result_saved_label), style = MaterialTheme.typography.labelMedium)
                 Text("−$saved %", style = HeroNumberStyle, color = MaterialTheme.colorScheme.secondary)
                 Spacer(Modifier.height(16.dp))
+                state.targetBytes?.let { target ->
+                    val limit = Formatter.formatShortFileSize(context, target)
+                    val fits = state.afterBytes <= target
+                    Text(
+                        text = stringResource(if (fits) R.string.result_limit_ok else R.string.result_limit_over, limit),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (fits) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
                 if (state.stripMetadata) {
                     Text(
                         text = stringResource(R.string.result_metadata_removed),

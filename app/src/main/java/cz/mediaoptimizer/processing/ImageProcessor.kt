@@ -7,6 +7,7 @@ import android.graphics.Color
 import android.graphics.ImageDecoder
 import androidx.exifinterface.media.ExifInterface
 import cz.mediaoptimizer.domain.model.ConversionSettings
+import cz.mediaoptimizer.domain.model.ImageParams
 import cz.mediaoptimizer.domain.model.MediaItem
 import cz.mediaoptimizer.domain.model.Preset
 import java.io.File
@@ -17,11 +18,11 @@ import kotlin.math.roundToInt
 /** Shrinks one photo to a JPEG copy; the original is never modified. */
 class ImageProcessor(private val context: Context) {
 
-    fun convert(item: MediaItem, settings: ConversionSettings, outFile: File) {
-        val bitmap = decodeForJpeg(item, settings.preset.imageMaxSide)
+    fun convert(item: MediaItem, params: ImageParams, settings: ConversionSettings, outFile: File) {
+        val bitmap = decodeForJpeg(item, params.maxSide)
         try {
             outFile.outputStream().use { out ->
-                check(bitmap.compress(Bitmap.CompressFormat.JPEG, settings.preset.imageQuality, out)) {
+                check(bitmap.compress(Bitmap.CompressFormat.JPEG, params.quality, out)) {
                     "JPEG compression failed"
                 }
             }

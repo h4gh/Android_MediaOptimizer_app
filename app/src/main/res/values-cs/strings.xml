@@ -38,6 +38,12 @@
     <string name="preset_large">Velká</string>
     <string name="setup_preset_hint_video">Videa: %1$dp, %2$.1f Mb/s, MP4</string>
     <string name="setup_preset_hint_photo">Fotky: delší strana max. %1$d px (menší fotky se nezvětšují)</string>
+    <string name="preset_limit">Limit</string>
+    <string name="setup_limit_hint_photo">Fotky: delší strana max. %1$d px, kvalita %2$d %%</string>
+    <string name="setup_limit_too_small_video">Ani v nejnižší kvalitě se to nevejde. Zkraťte video nebo zvyšte limit.</string>
+    <string name="setup_limit_too_small">Ani v nejnižší kvalitě se fotky nevejdou. Zvyšte limit nebo některé odeberte.</string>
+    <string name="setup_limit_gmail">Gmail %1$d MB</string>
+    <string name="setup_limit_custom">Vlastní limit</string>
     <string name="setup_strip_metadata">Odstranit polohu a údaje</string>
     <string name="setup_remove_audio">Bez zvuku</string>
     <string name="setup_optimize">Optimalizovat</string>
@@ -46,6 +52,8 @@
     <string name="result_saved_label">Ušetřeno</string>
     <string name="result_before">Před</string>
     <string name="result_metadata_removed">📍 Poloha a údaje o fotoaparátu odstraněny</string>
+    <string name="result_limit_ok">✓ Vejde se do %1$s</string>
+    <string name="result_limit_over">⚠ Překračuje limit %1$s</string>
     <string name="result_after">Po</string>
     <string name="result_share">Sdílet</string>
     <string name="result_zip_mail_text">V příloze: %1$s (souborů: %2$d, %3$s)</string>

@@ -21,6 +21,7 @@ import androidx.media3.transformer.Transformer
 import androidx.media3.transformer.VideoEncoderSettings
 import cz.mediaoptimizer.domain.model.ConversionSettings
 import cz.mediaoptimizer.domain.model.MediaItem
+import cz.mediaoptimizer.domain.model.VideoParams
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -36,17 +37,18 @@ class VideoProcessor(private val context: Context) {
 
     suspend fun convert(
         item: MediaItem,
+        params: VideoParams,
         settings: ConversionSettings,
         outFile: File,
         onProgress: (Float) -> Unit,
     ) {
         val location = if (settings.stripMetadata) null else readLocation(item)
         try {
-            export(item, settings, location, outFile, strict = true, onProgress)
+            export(item, params, settings, location, outFile, strict = true, onProgress)
         } catch (e: ExportException) {
             // Some phones cannot tone-map HDR to SDR or keep a constant bitrate: retry without both
             outFile.delete()
-            export(item, settings, location, outFile, strict = false, onProgress)
+            export(item, params, settings, location, outFile, strict = false, onProgress)
         }
     }
 
@@ -64,18 +66,18 @@ class VideoProcessor(private val context: Context) {
 
     private suspend fun export(
         item: MediaItem,
+        params: VideoParams,
         settings: ConversionSettings,
         location: Mp4LocationData?,
         outFile: File,
         strict: Boolean,
         onProgress: (Float) -> Unit,
     ) = withContext(Dispatchers.Main) {
-        val preset = settings.preset
         val inputShortSide = min(item.width, item.height)
         val videoEffects = buildList<Effect> {
             // Never upscale. Width follows from the aspect ratio; for portrait the short side is the width.
-            if (inputShortSide == 0 || inputShortSide > preset.videoShortSide) {
-                val target = preset.videoShortSide
+            if (inputShortSide == 0 || inputShortSide > params.shortSide) {
+                val target = params.shortSide
                 val height = if (item.height > item.width && item.width > 0) {
                     (item.height.toLong() * target / item.width).toInt()
                 } else {
@@ -95,7 +97,7 @@ class VideoProcessor(private val context: Context) {
         val encoderFactory = DefaultEncoderFactory.Builder(context)
             .setRequestedVideoEncoderSettings(
                 VideoEncoderSettings.Builder()
-                    .setBitrate(preset.videoBitrate)
+                    .setBitrate(params.bitrate)
                     // Constant bitrate: variable mode overshoots a lot at low bitrates on some phones
                     .apply { if (strict) setBitrateMode(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR) }
                     .build(),

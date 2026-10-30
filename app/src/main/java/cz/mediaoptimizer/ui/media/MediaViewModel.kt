@@ -10,6 +10,8 @@ import cz.mediaoptimizer.domain.model.ConversionResult
 import cz.mediaoptimizer.domain.model.ConversionSettings
 import cz.mediaoptimizer.domain.estimate.PhotoCalibration
 import cz.mediaoptimizer.domain.estimate.SizeEstimator
+import cz.mediaoptimizer.domain.estimate.TargetSizePlanner
+import cz.mediaoptimizer.domain.model.ItemPlan
 import cz.mediaoptimizer.domain.model.MediaItem
 import cz.mediaoptimizer.domain.model.MediaType
 import cz.mediaoptimizer.domain.model.Preset
@@ -23,6 +25,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
+
+fun MediaItem.plannerSource() = TargetSizePlanner.Source(
+    isVideo = type == MediaType.VIDEO,
+    width = width,
+    height = height,
+    sourceBytes = sizeBytes,
+    durationMs = durationMs ?: 0,
+)
 
 data class MediaSelectionState(
     val items: List<MediaItem> = emptyList(),
@@ -44,6 +55,8 @@ data class ConversionState(
     val total: Int = 0,
     val results: List<ConversionResult> = emptyList(),
     val stripMetadata: Boolean = true,
+    /** Limit of the "fit into X MB" mode, null for S/M/L. */
+    val targetBytes: Long? = null,
 ) {
     val converted get() = results.filter { it.outputFile != null }
     val beforeBytes get() = converted.sumOf { it.source.sizeBytes }
@@ -142,25 +155,72 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
     fun convert(settings: ConversionSettings) {
         if (_conversion.value.running) return // double tap
         val items = _state.value.items
+        val calibration = _state.value.calibration
         resetConversion()
         val id = batchId
-        _conversion.value = ConversionState(running = true, total = items.size, stripMetadata = settings.stripMetadata)
+        _conversion.value = ConversionState(
+            running = true,
+            total = items.size,
+            stripMetadata = settings.stripMetadata,
+            targetBytes = settings.targetBytes,
+        )
         conversionJob = viewModelScope.launch {
-            val results = queue.run(
-                items,
-                settings,
-                onFileProgress = { f ->
-                    _conversion.update { if (id != batchId) it else it.copy(current = f) }
-                },
-            ) { done, result ->
+            val target = settings.targetBytes
+            val plans = if (target != null) {
+                TargetSizePlanner.plan(items.map { it.plannerSource() }, target, settings.removeAudio, calibration).items
+            } else {
+                items.map { settings.preset.plan }
+            }.toMutableList()
+            val onFileProgress = { f: Float -> _conversion.update { if (id != batchId) it else it.copy(current = f) } }
+            var results = queue.run(items, plans, settings, onFileProgress) { done, result ->
                 _conversion.update {
                     if (id != batchId) it else it.copy(done = done, current = 0f, results = it.results + result)
                 }
+            }
+            if (target != null) {
+                results = fitIntoTarget(items, plans, results, settings, target, onFileProgress)
             }
             _conversion.update {
                 if (id != batchId) it else it.copy(running = false, finished = true, results = results)
             }
         }
+    }
+
+    /**
+     * Estimates are never exact: while the batch is over the limit, the biggest file is
+     * converted again with lower settings (TECH_DESIGN §9, step 7).
+     */
+    private suspend fun fitIntoTarget(
+        items: List<MediaItem>,
+        plans: MutableList<ItemPlan>,
+        results: List<ConversionResult>,
+        settings: ConversionSettings,
+        target: Long,
+        onFileProgress: (Float) -> Unit,
+    ): List<ConversionResult> {
+        val fixed = results.toMutableList()
+        repeat(MAX_RETRIES) {
+            val total = fixed.sumOf { it.outputBytes }
+            if (total <= target) return fixed
+            val i = fixed.indices.filter { fixed[it].outputFile != null }.maxByOrNull { fixed[it].outputBytes }
+                ?: return fixed
+            val current = fixed[i]
+            val wanted = current.outputBytes - (total - target * TargetSizePlanner.RESERVE)
+            val factor = (wanted / current.outputBytes).coerceIn(0.3, 0.9)
+            val next = TargetSizePlanner.shrink(items[i].plannerSource(), plans[i], factor)
+            if (next == plans[i]) return fixed // already at the smallest settings
+            plans[i] = next
+            // Convert to a new file first so a failure keeps the previous copy
+            val out = current.outputFile!!
+            val retry = File(out.parentFile, "retry_" + out.name)
+            val again = queue.convertOne(items[i], next, settings, retry, onFileProgress)
+            if (again.outputFile == null || !retry.renameTo(out)) {
+                retry.delete()
+                return fixed
+            }
+            fixed[i] = again.copy(outputFile = out)
+        }
+        return fixed
     }
 
     private fun resetConversion() {
@@ -181,5 +241,9 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
         selectionId++
         _state.value = MediaSelectionState(shareCount = _state.value.shareCount)
         viewModelScope.launch(Dispatchers.IO) { cache.clearAll() }
+    }
+
+    private companion object {
+        const val MAX_RETRIES = 3
     }
 }

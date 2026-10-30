@@ -6,6 +6,13 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.input.KeyboardType
+import cz.mediaoptimizer.domain.estimate.TargetSizePlanner
+import cz.mediaoptimizer.ui.media.plannerSource
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -84,20 +91,35 @@ fun SetupScreen(
     val picker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickMultipleVisualMedia(),
     ) { uris -> if (uris.isNotEmpty()) onAdd(uris) }
+    // 0-2 = S/M/L, 3 = fit into a limit
     var preset by rememberSaveable { mutableIntStateOf(1) }
+    var limitMb by rememberSaveable { mutableStateOf("10") }
     var stripMetadata by rememberSaveable { mutableStateOf(true) }
     var removeAudio by rememberSaveable { mutableStateOf(false) }
-    val presets = listOf(R.string.preset_small, R.string.preset_medium, R.string.preset_large)
+    val presets = listOf(R.string.preset_small, R.string.preset_medium, R.string.preset_large, R.string.preset_limit)
+    val limitMode = preset == LIMIT_INDEX
+    val targetBytes = if (limitMode) limitMb.toIntOrNull()?.takeIf { it > 0 }?.let { it * MB } else null
     val photos = state.items.count { it.type == MediaType.IMAGE }
     val videos = state.items.size - photos
     val totalBytes = state.items.sumOf { it.sizeBytes }
     val settings = ConversionSettings(
-        preset = Preset.entries[preset],
+        preset = Preset.entries[if (limitMode) 1 else preset],
         stripMetadata = stripMetadata,
         removeAudio = removeAudio,
+        targetBytes = targetBytes,
     )
-    val estimates = state.items.associate { it.uri to SizeEstimator.estimate(it, settings, state.calibration) }
+    val plan = remember(state.items, state.calibration, targetBytes, removeAudio) {
+        targetBytes?.let { target ->
+            TargetSizePlanner.plan(state.items.map { it.plannerSource() }, target, removeAudio, state.calibration)
+        }
+    }
+    val estimates = if (plan != null) {
+        state.items.zip(plan.estimates).associate { (item, bytes) -> item.uri to bytes }
+    } else {
+        state.items.associate { it.uri to SizeEstimator.estimate(it, settings, state.calibration) }
+    }
     val estimatedTotal = estimates.values.sum()
+    val shownPlan = plan?.items?.firstOrNull() ?: settings.preset.plan
 
     Scaffold(
         topBar = {
@@ -206,21 +228,46 @@ fun SetupScreen(
                     }
                 }
 
+                if (limitMode) {
+                    Spacer(Modifier.height(12.dp))
+                    LimitPicker(limitMb, onChange = { limitMb = it })
+                }
+
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = stringResource(R.string.setup_preset_hint_photo, Preset.entries[preset].imageMaxSide) +
+                    text = listOfNotNull(
+                        when {
+                            photos == 0 && limitMode -> null
+                            limitMode -> stringResource(
+                                R.string.setup_limit_hint_photo,
+                                shownPlan.image.maxSide,
+                                shownPlan.image.quality,
+                            )
+                            else -> stringResource(R.string.setup_preset_hint_photo, shownPlan.image.maxSide)
+                        },
                         if (videos > 0) {
-                            "\n" + stringResource(
+                            stringResource(
                                 R.string.setup_preset_hint_video,
-                                Preset.entries[preset].videoShortSide,
-                                Preset.entries[preset].videoBitrate / 1_000_000f,
+                                shownPlan.video.shortSide,
+                                shownPlan.video.bitrate / 1_000_000f,
                             )
                         } else {
-                            ""
+                            null
                         },
+                    ).joinToString("\n"),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (plan != null && !plan.fits && state.items.isNotEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(
+                            if (videos > 0) R.string.setup_limit_too_small_video else R.string.setup_limit_too_small,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
 
                 Spacer(Modifier.height(20.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -246,11 +293,44 @@ fun SetupScreen(
                 onClick = {
                     onOptimize(settings)
                 },
-                enabled = !state.loading && state.items.isNotEmpty(),
+                enabled = !state.loading && state.items.isNotEmpty() && (!limitMode || targetBytes != null),
             )
             Spacer(Modifier.height(8.dp))
         }
     }
+}
+
+private const val LIMIT_INDEX = 3
+private const val MB = 1_000_000L
+
+/** Quick limits for common uses (Gmail allows 25 MB per e-mail, but attachments grow by a third when sent). */
+private val LIMIT_CHOICES = listOf(5 to null, 10 to null, 18 to R.string.setup_limit_gmail, 25 to null)
+
+@Composable
+private fun LimitPicker(limitMb: String, onChange: (String) -> Unit) {
+    Row(
+        modifier = Modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        LIMIT_CHOICES.forEach { (mb, label) ->
+            FilterChip(
+                selected = limitMb == mb.toString(),
+                onClick = { onChange(mb.toString()) },
+                label = { Text(if (label != null) stringResource(label, mb) else "$mb MB") },
+                shape = RoundedCornerShape(50),
+            )
+        }
+    }
+    Spacer(Modifier.height(8.dp))
+    OutlinedTextField(
+        value = limitMb,
+        onValueChange = { value -> onChange(value.filter { it.isDigit() }.take(4)) },
+        label = { Text(stringResource(R.string.setup_limit_custom)) },
+        suffix = { Text("MB") },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
 
 @Composable

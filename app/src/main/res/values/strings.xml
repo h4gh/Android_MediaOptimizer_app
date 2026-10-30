@@ -33,6 +33,12 @@
     <string name="preset_large">Large</string>
     <string name="setup_preset_hint_video">Videos: %1$dp, %2$.1f Mb/s, MP4</string>
     <string name="setup_preset_hint_photo">Photos: longer side up to %1$d px (smaller photos stay as they are)</string>
+    <string name="preset_limit">Limit</string>
+    <string name="setup_limit_hint_photo">Photos: longer side max %1$d px, quality %2$d %%</string>
+    <string name="setup_limit_too_small_video">Even at the lowest quality this will not fit. Shorten the video or raise the limit.</string>
+    <string name="setup_limit_too_small">Even at the lowest quality the photos will not fit. Raise the limit or remove some photos.</string>
+    <string name="setup_limit_gmail">Gmail %1$d MB</string>
+    <string name="setup_limit_custom">Custom limit</string>
     <string name="setup_strip_metadata">Remove location &amp; info</string>
     <string name="setup_remove_audio">No audio</string>
     <string name="setup_optimize">Optimize</string>
@@ -41,6 +47,8 @@
     <string name="result_saved_label">You saved</string>
     <string name="result_before">Before</string>
     <string name="result_metadata_removed">📍 Location and camera info removed</string>
+    <string name="result_limit_ok">✓ Fits into %1$s</string>
+    <string name="result_limit_over">⚠ Over the %1$s limit</string>
     <string name="result_after">After</string>
     <string name="result_share">Share</string>
     <string name="result_zip_mail_text">Attached: %1$s (%2$d files, %3$s)</string>

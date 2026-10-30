@@ -1,6 +1,8 @@
 package cz.mediaoptimizer.domain.estimate
 
 import cz.mediaoptimizer.domain.model.ConversionSettings
+import cz.mediaoptimizer.domain.model.ImageParams
+import cz.mediaoptimizer.domain.model.ItemPlan
 import cz.mediaoptimizer.domain.model.MediaItem
 import cz.mediaoptimizer.domain.model.MediaType
 import cz.mediaoptimizer.domain.model.Preset
@@ -37,15 +39,64 @@ object SizeEstimator {
         return (width * scale).roundToInt().coerceAtLeast(1) to (height * scale).roundToInt().coerceAtLeast(1)
     }
 
-    fun estimateImage(width: Int, height: Int, preset: Preset, bytesPerPixel: Float): Long {
-        val (w, h) = imageOutputSize(width, height, preset.imageMaxSide)
+    fun estimateImage(width: Int, height: Int, preset: Preset, bytesPerPixel: Float): Long =
+        estimateImage(width, height, preset.imageMaxSide, bytesPerPixel)
+
+    fun estimateImage(width: Int, height: Int, maxSide: Int, bytesPerPixel: Float): Long {
+        val (w, h) = imageOutputSize(width, height, maxSide)
         return (w.toLong() * h * bytesPerPixel).toLong()
     }
 
-    fun estimateVideo(durationMs: Long, preset: Preset, removeAudio: Boolean): Long {
-        val bitsPerSecond = preset.videoBitrate + if (removeAudio) 0 else AUDIO_BITRATE
+    fun estimateVideo(durationMs: Long, preset: Preset, removeAudio: Boolean): Long =
+        estimateVideo(durationMs, preset.videoBitrate, removeAudio)
+
+    fun estimateVideo(durationMs: Long, videoBitrate: Int, removeAudio: Boolean): Long {
+        val bitsPerSecond = videoBitrate + if (removeAudio) 0 else AUDIO_BITRATE
         return (bitsPerSecond.toDouble() * durationMs / 1000 / 8 * CONTAINER_OVERHEAD).toLong()
     }
+
+    /** Bytes a video may take per second of length at [videoBitrate] (inverse of [estimateVideo]). */
+    fun videoBitrateFor(bytes: Long, durationMs: Long, removeAudio: Boolean): Int {
+        if (durationMs <= 0) return Int.MAX_VALUE
+        val bitsPerSecond = bytes * 8.0 / CONTAINER_OVERHEAD / (durationMs / 1000.0)
+        return (bitsPerSecond - if (removeAudio) 0 else AUDIO_BITRATE).toInt()
+    }
+
+    /**
+     * JPEG size relative to quality 80 (rough libjpeg curve), used when the
+     * "fit into X MB" mode picks qualities that were not measured.
+     */
+    fun qualityFactor(quality: Int): Float {
+        val q = quality.coerceIn(QUALITY_CURVE.first().first, QUALITY_CURVE.last().first)
+        val i = QUALITY_CURVE.indexOfFirst { it.first >= q }
+        if (QUALITY_CURVE[i].first == q || i == 0) return QUALITY_CURVE[i].second
+        val (q0, f0) = QUALITY_CURVE[i - 1]
+        val (q1, f1) = QUALITY_CURVE[i]
+        return f0 + (f1 - f0) * (q - q0) / (q1 - q0)
+    }
+
+    private val QUALITY_CURVE = listOf(
+        50 to 0.55f, 60 to 0.65f, 70 to 0.80f, 75 to 0.88f, 80 to 1.0f, 85 to 1.18f, 90 to 1.5f,
+    )
+
+    /** Photo estimate for any size cap and quality, based on the Medium calibration. */
+    fun estimateImage(
+        width: Int,
+        height: Int,
+        sourceBytes: Long,
+        params: ImageParams,
+        calibration: PhotoCalibration?,
+    ): Long {
+        val bpp = photoBytesPerPixel(Preset.MEDIUM, sourceBytes, width, height, calibration) *
+            qualityFactor(params.quality) / qualityFactor(Preset.MEDIUM.imageQuality)
+        return estimateImage(width, height, params.maxSide, bpp)
+    }
+
+    fun estimate(item: MediaItem, plan: ItemPlan, removeAudio: Boolean, calibration: PhotoCalibration?): Long =
+        when (item.type) {
+            MediaType.IMAGE -> estimateImage(item.width, item.height, item.sizeBytes, plan.image, calibration)
+            MediaType.VIDEO -> estimateVideo(item.durationMs ?: 0, plan.video.bitrate, removeAudio)
+        }
 
     /**
      * A photo whose original is more detailed (more bytes per pixel) than the samples
