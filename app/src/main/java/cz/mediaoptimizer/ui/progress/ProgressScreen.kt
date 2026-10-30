@@ -27,7 +27,7 @@ import cz.mediaoptimizer.ui.theme.HeroNumberStyle
 @Composable
 fun ProgressScreen(state: ConversionState, onCancel: () -> Unit) {
     BackHandler(onBack = onCancel)
-    val fraction = if (state.total == 0) 0f else state.done.toFloat() / state.total
+    val fraction = if (state.total == 0) 0f else ((state.done + state.current) / state.total).coerceIn(0f, 1f)
     Scaffold { padding ->
         Column(
             modifier = Modifier

@@ -2,10 +2,15 @@ package cz.mediaoptimizer.domain.model
 
 import java.io.File
 
-enum class Preset(val imageMaxSide: Int, val imageQuality: Int) {
-    SMALL(1280, 75),
-    MEDIUM(1920, 80),
-    LARGE(2560, 85),
+enum class Preset(
+    val imageMaxSide: Int,
+    val imageQuality: Int,
+    val videoShortSide: Int,
+    val videoBitrate: Int,
+) {
+    SMALL(1280, 75, 480, 1_000_000),
+    MEDIUM(1920, 80, 720, 2_500_000),
+    LARGE(2560, 85, 1080, 5_000_000),
 }
 
 data class ConversionSettings(

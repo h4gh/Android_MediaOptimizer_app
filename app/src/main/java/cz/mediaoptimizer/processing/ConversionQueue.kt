@@ -15,10 +15,12 @@ import java.io.File
 /** Converts a batch one file at a time into cache/out/<batch>/. */
 class ConversionQueue(context: Context, private val cache: CacheManager) {
     private val images = ImageProcessor(context)
+    private val videos = VideoProcessor(context)
 
     suspend fun run(
         items: List<MediaItem>,
         settings: ConversionSettings,
+        onFileProgress: (Float) -> Unit,
         onProgress: (done: Int, result: ConversionResult) -> Unit,
     ): List<ConversionResult> = withContext(Dispatchers.Default) {
         val dir = cache.newBatchDir()
@@ -26,21 +28,21 @@ class ConversionQueue(context: Context, private val cache: CacheManager) {
 
         items.mapIndexed { index, item ->
             ensureActive()
-            val result = when (item.type) {
-                MediaType.VIDEO -> ConversionResult(item, null, 0, skipped = true)
-                MediaType.IMAGE -> {
-                    val out = File(dir, uniqueName(item.name, "jpg", usedNames))
-                    try {
-                        withContext(Dispatchers.IO) { images.convert(item, settings, out) }
-                        ConversionResult(item, out, out.length())
-                    } catch (e: CancellationException) {
-                        out.delete()
-                        throw e
-                    } catch (e: Exception) {
-                        out.delete()
-                        ConversionResult(item, null, 0, error = e.message ?: e.javaClass.simpleName)
-                    }
+            val ext = if (item.type == MediaType.VIDEO) "mp4" else "jpg"
+            val out = File(dir, uniqueName(item.name, ext, usedNames))
+            onFileProgress(0f)
+            val result = try {
+                when (item.type) {
+                    MediaType.IMAGE -> withContext(Dispatchers.IO) { images.convert(item, settings, out) }
+                    MediaType.VIDEO -> videos.convert(item, settings, out, onFileProgress)
                 }
+                ConversionResult(item, out, out.length())
+            } catch (e: CancellationException) {
+                out.delete()
+                throw e
+            } catch (e: Exception) {
+                out.delete()
+                ConversionResult(item, null, 0, error = e.message ?: e.javaClass.simpleName)
             }
             onProgress(index + 1, result)
             result

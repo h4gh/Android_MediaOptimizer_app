@@ -171,7 +171,16 @@ fun SetupScreen(
 
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = stringResource(R.string.setup_preset_hint_photo, Preset.entries[preset].imageMaxSide),
+                    text = stringResource(R.string.setup_preset_hint_photo, Preset.entries[preset].imageMaxSide) +
+                        if (videos > 0) {
+                            "\n" + stringResource(
+                                R.string.setup_preset_hint_video,
+                                Preset.entries[preset].videoShortSide,
+                                Preset.entries[preset].videoBitrate / 1_000_000f,
+                            )
+                        } else {
+                            ""
+                        },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

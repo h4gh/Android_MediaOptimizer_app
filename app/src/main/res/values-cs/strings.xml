@@ -34,6 +34,7 @@
     <string name="preset_small">Malá</string>
     <string name="preset_medium">Střední</string>
     <string name="preset_large">Velká</string>
+    <string name="setup_preset_hint_video">Videa: %1$dp, %2$.1f Mb/s, MP4</string>
     <string name="setup_preset_hint_photo">Fotky: delší strana max. %1$d px (menší fotky se nezvětšují)</string>
     <string name="setup_strip_metadata">Odstranit polohu a údaje</string>
     <string name="setup_remove_audio">Bez zvuku</string>

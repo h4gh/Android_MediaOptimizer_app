@@ -62,5 +62,8 @@ dependencies {
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.exifinterface)
+    implementation(libs.androidx.media3.transformer)
+    implementation(libs.androidx.media3.effect)
+    implementation(libs.androidx.media3.common)
     debugImplementation(libs.androidx.ui.tooling)
 }

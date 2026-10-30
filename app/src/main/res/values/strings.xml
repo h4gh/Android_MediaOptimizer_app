@@ -29,6 +29,7 @@
     <string name="preset_small">Small</string>
     <string name="preset_medium">Medium</string>
     <string name="preset_large">Large</string>
+    <string name="setup_preset_hint_video">Videos: %1$dp, %2$.1f Mb/s, MP4</string>
     <string name="setup_preset_hint_photo">Photos: longer side up to %1$d px (smaller photos stay as they are)</string>
     <string name="setup_strip_metadata">Remove location &amp; info</string>
     <string name="setup_remove_audio">No audio</string>

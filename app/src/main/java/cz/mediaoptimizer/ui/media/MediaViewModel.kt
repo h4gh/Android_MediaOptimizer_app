@@ -32,6 +32,8 @@ data class ConversionState(
     val running: Boolean = false,
     val finished: Boolean = false,
     val done: Int = 0,
+    /** Progress of the file being converted now, 0..1 (videos). */
+    val current: Float = 0f,
     val total: Int = 0,
     val results: List<ConversionResult> = emptyList(),
 ) {
@@ -92,9 +94,15 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
         val id = batchId
         _conversion.value = ConversionState(running = true, total = items.size)
         conversionJob = viewModelScope.launch {
-            val results = queue.run(items, settings) { done, result ->
+            val results = queue.run(
+                items,
+                settings,
+                onFileProgress = { f ->
+                    _conversion.update { if (id != batchId) it else it.copy(current = f) }
+                },
+            ) { done, result ->
                 _conversion.update {
-                    if (id != batchId) it else it.copy(done = done, results = it.results + result)
+                    if (id != batchId) it else it.copy(done = done, current = 0f, results = it.results + result)
                 }
             }
             _conversion.update {
