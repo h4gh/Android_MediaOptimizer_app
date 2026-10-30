@@ -62,8 +62,8 @@
 
     <string name="setup_trim_hint">Tap a video to trim it</string>
     <string name="trim_title">Trim video</string>
-    <string name="trim_play">▶ Play</string>
-    <string name="trim_pause">⏸ Pause</string>
+    <string name="trim_play">Play</string>
+    <string name="trim_pause">Pause</string>
     <string name="trim_reset">Whole video</string>
     <string name="trim_done">Done</string>
     <string name="trim_length">Length %1$s</string>

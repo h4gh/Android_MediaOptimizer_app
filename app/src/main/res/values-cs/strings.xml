@@ -67,8 +67,8 @@
 
     <string name="setup_trim_hint">Klepnutím na video ho oříznete</string>
     <string name="trim_title">Oříznout video</string>
-    <string name="trim_play">▶ Přehrát</string>
-    <string name="trim_pause">⏸ Pauza</string>
+    <string name="trim_play">Přehrát</string>
+    <string name="trim_pause">Pauza</string>
     <string name="trim_reset">Celé video</string>
     <string name="trim_done">Hotovo</string>
     <string name="trim_length">Délka %1$s</string>

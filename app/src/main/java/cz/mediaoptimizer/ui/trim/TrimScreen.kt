@@ -1,6 +1,17 @@
 package cz.mediaoptimizer.ui.trim
 
 import androidx.annotation.OptIn
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -54,6 +65,17 @@ import kotlin.math.min
 /** Shortest part of a video that can be kept. */
 private const val MIN_LENGTH_MS = 1_000L
 
+/** Two bars in the button's content colour (the ⏸ emoji is drawn orange on some phones). */
+@Composable
+private fun PauseIcon() {
+    val color = LocalContentColor.current
+    Canvas(Modifier.size(24.dp)) {
+        val bar = size.width / 5
+        drawRect(color, topLeft = Offset(bar, size.height * 0.2f), size = Size(bar, size.height * 0.6f))
+        drawRect(color, topLeft = Offset(bar * 3, size.height * 0.2f), size = Size(bar, size.height * 0.6f))
+    }
+}
+
 /** Video preview with a start/end slider; the original file is never changed. */
 @OptIn(UnstableApi::class)
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
@@ -66,6 +88,7 @@ fun TrimScreen(item: MediaItem, onDone: (TrimRange?) -> Unit, onBack: () -> Unit
         mutableStateOf(item.trim?.let { it.startMs.toFloat()..it.endMs.toFloat() } ?: fullRange)
     }
     var playing by remember { mutableStateOf(false) }
+    var position by remember { mutableLongStateOf(range.start.toLong()) }
     // Which mark was dragged last, so the preview shows that frame
     var draggedStart by remember { mutableStateOf(true) }
 
@@ -91,11 +114,13 @@ fun TrimScreen(item: MediaItem, onDone: (TrimRange?) -> Unit, onBack: () -> Unit
     // While previewing, stop at the end mark and jump back to the start
     LaunchedEffect(playing) {
         while (playing) {
-            if (player.currentPosition >= range.endInclusive) {
+            position = player.currentPosition
+            if (position >= range.endInclusive) {
                 player.pause()
                 player.seekTo(range.start.toLong())
+                position = range.start.toLong()
             }
-            delay(50)
+            delay(30)
         }
     }
 
@@ -166,6 +191,8 @@ fun TrimScreen(item: MediaItem, onDone: (TrimRange?) -> Unit, onBack: () -> Unit
                         }
                     },
                 ) {
+                    if (playing) PauseIcon() else Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                    Spacer(Modifier.width(6.dp))
                     Text(stringResource(if (playing) R.string.trim_pause else R.string.trim_play))
                 }
             }
@@ -180,13 +207,31 @@ fun TrimScreen(item: MediaItem, onDone: (TrimRange?) -> Unit, onBack: () -> Unit
                     player.pause()
                     // Fast, approximate frames while dragging
                     player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
-                    player.seekTo((if (draggedStart) new.start else new.endInclusive).toLong())
+                    position = (if (draggedStart) new.start else new.endInclusive).toLong()
+                    player.seekTo(position)
                 },
                 onValueChangeFinished = {
                     player.setSeekParameters(SeekParameters.EXACT)
                     player.seekTo((if (draggedStart) range.start else range.endInclusive).toLong())
                 },
                 valueRange = fullRange,
+                track = { sliderState ->
+                    // Playhead drawn over the track so it lines up with the marks exactly
+                    val playheadColor = MaterialTheme.colorScheme.onSurface
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        SliderDefaults.Track(rangeSliderState = sliderState)
+                        Canvas(Modifier.fillMaxWidth().height(28.dp)) {
+                            val x = size.width * (position.toFloat() / duration).coerceIn(0f, 1f)
+                            drawLine(
+                                color = playheadColor,
+                                start = Offset(x, 0f),
+                                end = Offset(x, size.height),
+                                strokeWidth = 3.dp.toPx(),
+                                cap = StrokeCap.Round,
+                            )
+                        }
+                    }
+                },
             )
 
             Spacer(Modifier.height(12.dp))
@@ -194,6 +239,7 @@ fun TrimScreen(item: MediaItem, onDone: (TrimRange?) -> Unit, onBack: () -> Unit
                 OutlinedButton(
                     onClick = {
                         range = fullRange
+                        position = 0
                         player.seekTo(0)
                     },
                     modifier = Modifier.height(60.dp),
