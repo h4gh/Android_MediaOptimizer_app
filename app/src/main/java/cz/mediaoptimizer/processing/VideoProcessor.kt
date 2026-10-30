@@ -91,6 +91,7 @@ class VideoProcessor(private val context: Context) {
             .setVideoMimeType(MimeTypes.VIDEO_H264)
             .setAudioMimeType(MimeTypes.AUDIO_AAC)
             .setEncoderFactory(encoderFactory)
+            .apply { if (settings.stripMetadata) setMuxerFactory(LocationStrippingMuxer.Factory()) }
             .addListener(object : Transformer.Listener {
                 override fun onCompleted(composition: Composition, exportResult: ExportResult) {
                     finished.complete(Unit)

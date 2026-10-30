@@ -40,6 +40,7 @@
     <string name="result_title">Done</string>
     <string name="result_saved_label">You saved</string>
     <string name="result_before">Before</string>
+    <string name="result_metadata_removed">📍 Location and camera info removed</string>
     <string name="result_after">After</string>
     <string name="result_share">Share</string>
     <string name="result_done">Back to start</string>

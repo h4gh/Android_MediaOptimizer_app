@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.androidx.media3.transformer)
     implementation(libs.androidx.media3.effect)
     implementation(libs.androidx.media3.common)
+    implementation(libs.androidx.media3.container)
     debugImplementation(libs.androidx.ui.tooling)
     testImplementation(libs.junit)
 }

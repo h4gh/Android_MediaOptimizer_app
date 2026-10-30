@@ -45,6 +45,7 @@
     <string name="result_title">Hotovo</string>
     <string name="result_saved_label">Ušetřeno</string>
     <string name="result_before">Před</string>
+    <string name="result_metadata_removed">📍 Poloha a údaje o fotoaparátu odstraněny</string>
     <string name="result_after">Po</string>
     <string name="result_share">Sdílet</string>
     <string name="result_done">Zpět na začátek</string>

@@ -56,6 +56,13 @@ fun ResultScreen(state: ConversionState, onDone: () -> Unit) {
                 Text(stringResource(R.string.result_saved_label), style = MaterialTheme.typography.labelMedium)
                 Text("−$saved %", style = HeroNumberStyle, color = MaterialTheme.colorScheme.secondary)
                 Spacer(Modifier.height(16.dp))
+                if (state.stripMetadata) {
+                    Text(
+                        text = stringResource(R.string.result_metadata_removed),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Column {
                         Text(stringResource(R.string.result_before), style = MaterialTheme.typography.labelMedium)

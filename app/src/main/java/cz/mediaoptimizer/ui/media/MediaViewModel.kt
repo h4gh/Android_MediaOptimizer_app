@@ -43,6 +43,7 @@ data class ConversionState(
     val current: Float = 0f,
     val total: Int = 0,
     val results: List<ConversionResult> = emptyList(),
+    val stripMetadata: Boolean = true,
 ) {
     val converted get() = results.filter { it.outputFile != null }
     val beforeBytes get() = converted.sumOf { it.source.sizeBytes }
@@ -143,7 +144,7 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
         val items = _state.value.items
         resetConversion()
         val id = batchId
-        _conversion.value = ConversionState(running = true, total = items.size)
+        _conversion.value = ConversionState(running = true, total = items.size, stripMetadata = settings.stripMetadata)
         conversionJob = viewModelScope.launch {
             val results = queue.run(
                 items,
