@@ -58,7 +58,6 @@ import cz.mediaoptimizer.domain.model.MediaItem
 import cz.mediaoptimizer.domain.model.TrimRange
 import cz.mediaoptimizer.ui.components.BigPrimaryButton
 import cz.mediaoptimizer.ui.media.formatDuration
-import cz.mediaoptimizer.ui.theme.LocalGoodColor
 import kotlinx.coroutines.delay
 import kotlin.math.min
 
@@ -217,7 +216,7 @@ fun TrimScreen(item: MediaItem, onDone: (TrimRange?) -> Unit, onBack: () -> Unit
                 valueRange = fullRange,
                 track = { sliderState ->
                     // Playhead drawn over the track so it lines up with the marks exactly
-                    val playheadColor = LocalGoodColor.current
+                    val playheadColor = MaterialTheme.colorScheme.primary // same as the selected part of the track
                     val outlineColor = MaterialTheme.colorScheme.background
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         SliderDefaults.Track(rangeSliderState = sliderState)
