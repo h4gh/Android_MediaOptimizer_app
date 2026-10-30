@@ -10,7 +10,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import cz.mediaoptimizer.data.AppSettings
 import cz.mediaoptimizer.ui.home.HomeScreen
+import cz.mediaoptimizer.ui.settings.SettingsScreen
 import cz.mediaoptimizer.ui.media.MediaViewModel
 import cz.mediaoptimizer.ui.progress.ProgressScreen
 import cz.mediaoptimizer.ui.result.ResultScreen
@@ -22,12 +24,17 @@ object Routes {
     const val SETUP = "setup"
     const val PROGRESS = "progress"
     const val RESULT = "result"
+    const val SETTINGS = "settings"
     const val TRIM = "trim/{uri}"
     fun trim(uri: Uri) = "trim/" + Uri.encode(uri.toString())
 }
 
 @Composable
-fun AppNavHost(media: MediaViewModel) {
+fun AppNavHost(
+    media: MediaViewModel,
+    settings: AppSettings,
+    onSettingsChange: ((AppSettings) -> AppSettings) -> Unit,
+) {
     val nav = rememberNavController()
     val state by media.state.collectAsStateWithLifecycle()
     val conversion by media.conversion.collectAsStateWithLifecycle()
@@ -49,11 +56,16 @@ fun AppNavHost(media: MediaViewModel) {
                     media.select(uris)
                     nav.navigate(Routes.SETUP)
                 },
+                onSettings = { nav.navigate(Routes.SETTINGS) },
             )
+        }
+        composable(Routes.SETTINGS) {
+            SettingsScreen(settings = settings, onChange = onSettingsChange, onBack = { nav.popBackStack() })
         }
         composable(Routes.SETUP) {
             SetupScreen(
                 state = state,
+                defaults = settings,
                 onRemove = media::remove,
                 onAdd = media::add,
                 onTrim = { nav.navigate(Routes.trim(it.uri)) },

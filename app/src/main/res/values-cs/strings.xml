@@ -7,7 +7,7 @@
     <string name="home_hero_body">Vyberte fotky a videa, zvolte velikost a sdílejte lehké kopie. Originály zůstanou beze změny.</string>
     <string name="home_pick_media">Vybrat média</string>
 
-    <string name="setup_title">Nastavení</string>
+    <string name="setup_title">Příprava</string>
     <string name="setup_estimate_label">Odhad velikosti · úspora</string>
     <string name="setup_from_size">z %1$s</string>
     <string name="setup_loading">Načítám soubory…</string>
@@ -87,4 +87,20 @@
     <string name="options_bitrate_value">%1$.2f Mb/s</string>
     <string name="options_frame_rate">Snímková frekvence</string>
     <string name="options_frame_rate_original">Původní</string>
+    <string name="settings_title">Nastavení</string>
+    <string name="settings_appearance">Vzhled</string>
+    <string name="settings_theme">Motiv</string>
+    <string name="settings_theme_system">Systém</string>
+    <string name="settings_theme_light">Světlý</string>
+    <string name="settings_theme_dark">Tmavý</string>
+    <string name="settings_color">Barva</string>
+    <string name="color_teal">Teal</string>
+    <string name="color_tangerine">Mandarinka</string>
+    <string name="color_cobalt">Kobalt</string>
+    <string name="color_wallpaper">Podle tapety</string>
+    <string name="settings_language">Jazyk</string>
+    <string name="settings_language_system">Podle telefonu</string>
+    <string name="settings_defaults">Výchozí hodnoty</string>
+    <string name="settings_default_size">Velikost</string>
+    <string name="settings_strip_hint">Platí při každém spuštění; u každé dávky to jde ještě změnit.</string>
 </resources>

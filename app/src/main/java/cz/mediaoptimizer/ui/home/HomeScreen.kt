@@ -6,6 +6,13 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -25,7 +32,7 @@ import cz.mediaoptimizer.ui.components.HeroCard
 import cz.mediaoptimizer.ui.theme.MediaOptimizerTheme
 
 @Composable
-fun HomeScreen(onMediaPicked: (List<Uri>) -> Unit) {
+fun HomeScreen(onMediaPicked: (List<Uri>) -> Unit, onSettings: () -> Unit) {
     val picker = rememberLauncherForActivityResult(
         ActivityResultContracts.PickMultipleVisualMedia(),
     ) { uris -> if (uris.isNotEmpty()) onMediaPicked(uris) }
@@ -36,11 +43,17 @@ fun HomeScreen(onMediaPicked: (List<Uri>) -> Unit) {
                 .padding(padding)
                 .padding(horizontal = 24.dp, vertical = 16.dp),
         ) {
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.weight(1f),
+                )
+                IconButton(onClick = onSettings) {
+                    Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.settings_title))
+                }
+            }
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center,
@@ -78,5 +91,5 @@ fun HomeScreen(onMediaPicked: (List<Uri>) -> Unit) {
 @Preview(showBackground = true)
 @Composable
 private fun HomePreview() {
-    MediaOptimizerTheme { HomeScreen(onMediaPicked = {}) }
+    MediaOptimizerTheme { HomeScreen(onMediaPicked = {}, onSettings = {}) }
 }

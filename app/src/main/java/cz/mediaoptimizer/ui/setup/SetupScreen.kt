@@ -74,6 +74,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cz.mediaoptimizer.R
+import cz.mediaoptimizer.data.AppSettings
 import cz.mediaoptimizer.domain.estimate.SizeEstimator
 import cz.mediaoptimizer.domain.model.ConversionSettings
 import cz.mediaoptimizer.domain.model.MediaItem
@@ -90,6 +91,7 @@ import cz.mediaoptimizer.ui.theme.LocalGoodColor
 @Composable
 fun SetupScreen(
     state: MediaSelectionState,
+    defaults: AppSettings,
     onRemove: (MediaItem) -> Unit,
     onAdd: (List<Uri>) -> Unit,
     onTrim: (MediaItem) -> Unit,
@@ -101,17 +103,17 @@ fun SetupScreen(
         ActivityResultContracts.PickMultipleVisualMedia(),
     ) { uris -> if (uris.isNotEmpty()) onAdd(uris) }
     // 0-2 = S/M/L, 3 = fit into a limit
-    var preset by rememberSaveable { mutableIntStateOf(1) }
+    var preset by rememberSaveable { mutableIntStateOf(defaults.defaultPreset.ordinal) }
     var limitMb by rememberSaveable { mutableStateOf("10") }
     var moreOptions by rememberSaveable { mutableStateOf(false) }
     // "More options" values; start from the preset and are reset when another preset is picked
-    var maxSide by rememberSaveable { mutableIntStateOf(Preset.MEDIUM.imageMaxSide) }
-    var quality by rememberSaveable { mutableIntStateOf(Preset.MEDIUM.imageQuality) }
+    var maxSide by rememberSaveable { mutableIntStateOf(defaults.defaultPreset.imageMaxSide) }
+    var quality by rememberSaveable { mutableIntStateOf(defaults.defaultPreset.imageQuality) }
     var format by rememberSaveable { mutableStateOf(ImageFormat.JPEG) }
-    var shortSide by rememberSaveable { mutableIntStateOf(Preset.MEDIUM.videoShortSide) }
-    var bitrate by rememberSaveable { mutableIntStateOf(Preset.MEDIUM.videoBitrate) }
+    var shortSide by rememberSaveable { mutableIntStateOf(defaults.defaultPreset.videoShortSide) }
+    var bitrate by rememberSaveable { mutableIntStateOf(defaults.defaultPreset.videoBitrate) }
     var frameRate by rememberSaveable { mutableStateOf<Int?>(null) }
-    var stripMetadata by rememberSaveable { mutableStateOf(true) }
+    var stripMetadata by rememberSaveable { mutableStateOf(defaults.stripMetadata) }
     var removeAudio by rememberSaveable { mutableStateOf(false) }
     val presets = listOf(R.string.preset_small, R.string.preset_medium, R.string.preset_large, R.string.preset_limit)
     val limitMode = preset == LIMIT_INDEX

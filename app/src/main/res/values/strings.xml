@@ -8,7 +8,7 @@
     <string name="home_hero_body">Pick photos and videos, choose a size and share light copies. Your originals stay untouched.</string>
     <string name="home_pick_media">Select media</string>
 
-    <string name="setup_title">Settings</string>
+    <string name="setup_title">Prepare</string>
     <string name="setup_estimate_label">Estimated size · saved</string>
     <string name="setup_from_size">from %1$s</string>
     <string name="setup_loading">Reading files…</string>
@@ -82,4 +82,20 @@
     <string name="options_bitrate_value">%1$.2f Mb/s</string>
     <string name="options_frame_rate">Frame rate</string>
     <string name="options_frame_rate_original">Original</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_color">Colour</string>
+    <string name="color_teal">Teal</string>
+    <string name="color_tangerine">Tangerine</string>
+    <string name="color_cobalt">Cobalt</string>
+    <string name="color_wallpaper">Wallpaper</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_system">Phone</string>
+    <string name="settings_defaults">Defaults</string>
+    <string name="settings_default_size">Size</string>
+    <string name="settings_strip_hint">Turned on when you open the app; you can still change it for each batch.</string>
 </resources>
