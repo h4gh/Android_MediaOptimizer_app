@@ -175,7 +175,7 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
             val plans = if (target != null) {
                 TargetSizePlanner.plan(items.map { it.plannerSource() }, target, settings.removeAudio, calibration).items
             } else {
-                items.map { settings.preset.plan }
+                items.map { settings.custom ?: settings.preset.plan }
             }.toMutableList()
             val onFileProgress = { f: Float -> _conversion.update { if (id != batchId) it else it.copy(current = f) } }
             var results = queue.run(items, plans, settings, onFileProgress) { done, result ->

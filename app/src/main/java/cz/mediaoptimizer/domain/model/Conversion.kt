@@ -2,11 +2,17 @@ package cz.mediaoptimizer.domain.model
 
 import java.io.File
 
-/** How one photo is encoded: longer side cap and JPEG quality. */
-data class ImageParams(val maxSide: Int, val quality: Int)
+enum class ImageFormat(val extension: String, val label: String) {
+    JPEG("jpg", "JPG"),
+    WEBP("webp", "WebP"),
+    PNG("png", "PNG"), // lossless, quality is ignored
+}
 
-/** How one video is encoded: short side cap and video bitrate (b/s). */
-data class VideoParams(val shortSide: Int, val bitrate: Int)
+/** How one photo is encoded: longer side cap, quality (0-100) and format. */
+data class ImageParams(val maxSide: Int, val quality: Int, val format: ImageFormat = ImageFormat.JPEG)
+
+/** How one video is encoded: short side cap, video bitrate (b/s) and optional frame rate cap. */
+data class VideoParams(val shortSide: Int, val bitrate: Int, val frameRate: Int? = null)
 
 /** Encoding of one item; only the part matching its type is used. */
 data class ItemPlan(val image: ImageParams, val video: VideoParams)
@@ -30,6 +36,8 @@ data class ConversionSettings(
     val removeAudio: Boolean = false,
     /** "Fit into X MB" mode: the whole batch should fit into this many bytes; the preset is then ignored. */
     val targetBytes: Long? = null,
+    /** "More options": own values instead of the preset (ignored in the limit mode). */
+    val custom: ItemPlan? = null,
 )
 
 data class ConversionResult(

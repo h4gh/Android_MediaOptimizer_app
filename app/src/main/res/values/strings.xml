@@ -67,4 +67,19 @@
     <string name="trim_reset">Whole video</string>
     <string name="trim_done">Done</string>
     <string name="trim_length">Length %1$s</string>
+    <string name="setup_more_options">More options ▾</string>
+    <string name="setup_fewer_options">Fewer options ▴</string>
+    <string name="options_photos">Photos</string>
+    <string name="options_max_side">Longer side</string>
+    <string name="options_quality">Quality</string>
+    <string name="options_format">Format</string>
+    <string name="options_format_jpg">Smallest files, opens everywhere.</string>
+    <string name="options_format_webp">About a quarter smaller than JPG; some older apps cannot open it.</string>
+    <string name="options_format_png">Lossless, keeps transparency, but files are much bigger.</string>
+    <string name="options_videos">Videos</string>
+    <string name="options_resolution">Resolution (short side)</string>
+    <string name="options_bitrate">Bitrate</string>
+    <string name="options_bitrate_value">%1$.2f Mb/s</string>
+    <string name="options_frame_rate">Frame rate</string>
+    <string name="options_frame_rate_original">Original</string>
 </resources>

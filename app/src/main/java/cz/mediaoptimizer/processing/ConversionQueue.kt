@@ -30,7 +30,7 @@ class ConversionQueue(context: Context, private val cache: CacheManager) {
 
         items.mapIndexed { index, item ->
             ensureActive()
-            val ext = if (item.type == MediaType.VIDEO) "mp4" else "jpg"
+            val ext = if (item.type == MediaType.VIDEO) "mp4" else plans[index].image.format.extension
             val out = File(dir, uniqueName(item.name, ext, usedNames))
             val result = convertOne(item, plans[index], settings, out, onFileProgress)
             onProgress(index + 1, result)

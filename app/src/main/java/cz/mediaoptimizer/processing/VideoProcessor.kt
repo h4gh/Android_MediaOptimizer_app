@@ -8,6 +8,7 @@ import androidx.media3.common.Effect
 import androidx.media3.common.MimeTypes
 import androidx.media3.container.Mp4LocationData
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.effect.FrameDropEffect
 import androidx.media3.effect.Presentation
 import androidx.media3.transformer.Composition
 import androidx.media3.transformer.DefaultEncoderFactory
@@ -85,6 +86,8 @@ class VideoProcessor(private val context: Context) {
                 }
                 add(Presentation.createForHeight(height / 2 * 2))
             }
+            // Only drops frames when the original has a higher frame rate
+            params.frameRate?.let { add(FrameDropEffect.createDefaultFrameDropEffect(it.toFloat())) }
         }
         val source = androidx.media3.common.MediaItem.Builder()
             .setUri(item.uri)

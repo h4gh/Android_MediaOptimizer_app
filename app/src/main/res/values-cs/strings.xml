@@ -72,4 +72,19 @@
     <string name="trim_reset">Celé video</string>
     <string name="trim_done">Hotovo</string>
     <string name="trim_length">Délka %1$s</string>
+    <string name="setup_more_options">Další možnosti ▾</string>
+    <string name="setup_fewer_options">Méně možností ▴</string>
+    <string name="options_photos">Fotky</string>
+    <string name="options_max_side">Delší strana</string>
+    <string name="options_quality">Kvalita</string>
+    <string name="options_format">Formát</string>
+    <string name="options_format_jpg">Nejmenší soubory, otevře se všude.</string>
+    <string name="options_format_webp">Asi o čtvrtinu menší než JPG, některé starší aplikace ho neotevřou.</string>
+    <string name="options_format_png">Bezeztrátový, zachová průhlednost, ale soubory jsou mnohem větší.</string>
+    <string name="options_videos">Videa</string>
+    <string name="options_resolution">Rozlišení (kratší strana)</string>
+    <string name="options_bitrate">Datový tok</string>
+    <string name="options_bitrate_value">%1$.2f Mb/s</string>
+    <string name="options_frame_rate">Snímková frekvence</string>
+    <string name="options_frame_rate_original">Původní</string>
 </resources>

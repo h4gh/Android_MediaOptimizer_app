@@ -1,6 +1,7 @@
 package cz.mediaoptimizer.domain.estimate
 
 import cz.mediaoptimizer.domain.model.ConversionSettings
+import cz.mediaoptimizer.domain.model.ImageFormat
 import cz.mediaoptimizer.domain.model.ImageParams
 import cz.mediaoptimizer.domain.model.ItemPlan
 import cz.mediaoptimizer.domain.model.MediaItem
@@ -75,6 +76,12 @@ object SizeEstimator {
         return f0 + (f1 - f0) * (q - q0) / (q1 - q0)
     }
 
+    /** WebP is usually about a quarter smaller than JPEG at the same quality. */
+    private const val WEBP_FACTOR = 0.75f
+
+    /** Lossless PNG of a photo, roughly. */
+    private const val PNG_BYTES_PER_PIXEL = 1.6f
+
     private val QUALITY_CURVE = listOf(
         50 to 0.55f, 60 to 0.65f, 70 to 0.80f, 75 to 0.88f, 80 to 1.0f, 85 to 1.18f, 90 to 1.5f,
     )
@@ -87,8 +94,13 @@ object SizeEstimator {
         params: ImageParams,
         calibration: PhotoCalibration?,
     ): Long {
-        val bpp = photoBytesPerPixel(Preset.MEDIUM, sourceBytes, width, height, calibration) *
+        val jpegBpp = photoBytesPerPixel(Preset.MEDIUM, sourceBytes, width, height, calibration) *
             qualityFactor(params.quality) / qualityFactor(Preset.MEDIUM.imageQuality)
+        val bpp = when (params.format) {
+            ImageFormat.JPEG -> jpegBpp
+            ImageFormat.WEBP -> jpegBpp * WEBP_FACTOR
+            ImageFormat.PNG -> PNG_BYTES_PER_PIXEL
+        }
         return estimateImage(width, height, params.maxSide, bpp)
     }
 
@@ -117,7 +129,9 @@ object SizeEstimator {
     }
 
     fun estimate(item: MediaItem, settings: ConversionSettings, calibration: PhotoCalibration?): Long =
-        when (item.type) {
+        if (settings.custom != null) {
+            estimate(item, settings.custom, settings.removeAudio, calibration)
+        } else when (item.type) {
             MediaType.IMAGE -> estimateImage(
                 item.width,
                 item.height,

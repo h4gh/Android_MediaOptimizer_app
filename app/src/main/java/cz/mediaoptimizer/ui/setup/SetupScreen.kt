@@ -6,6 +6,14 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
+import androidx.compose.foundation.background
+import androidx.compose.material3.Slider
+import androidx.compose.material3.TextButton
+import cz.mediaoptimizer.domain.model.ImageFormat
+import cz.mediaoptimizer.domain.model.ImageParams
+import cz.mediaoptimizer.domain.model.ItemPlan
+import cz.mediaoptimizer.domain.model.VideoParams
+import kotlin.math.roundToInt
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
@@ -95,6 +103,14 @@ fun SetupScreen(
     // 0-2 = S/M/L, 3 = fit into a limit
     var preset by rememberSaveable { mutableIntStateOf(1) }
     var limitMb by rememberSaveable { mutableStateOf("10") }
+    var moreOptions by rememberSaveable { mutableStateOf(false) }
+    // "More options" values; start from the preset and are reset when another preset is picked
+    var maxSide by rememberSaveable { mutableIntStateOf(Preset.MEDIUM.imageMaxSide) }
+    var quality by rememberSaveable { mutableIntStateOf(Preset.MEDIUM.imageQuality) }
+    var format by rememberSaveable { mutableStateOf(ImageFormat.JPEG) }
+    var shortSide by rememberSaveable { mutableIntStateOf(Preset.MEDIUM.videoShortSide) }
+    var bitrate by rememberSaveable { mutableIntStateOf(Preset.MEDIUM.videoBitrate) }
+    var frameRate by rememberSaveable { mutableStateOf<Int?>(null) }
     var stripMetadata by rememberSaveable { mutableStateOf(true) }
     var removeAudio by rememberSaveable { mutableStateOf(false) }
     val presets = listOf(R.string.preset_small, R.string.preset_medium, R.string.preset_large, R.string.preset_limit)
@@ -108,6 +124,11 @@ fun SetupScreen(
         stripMetadata = stripMetadata,
         removeAudio = removeAudio,
         targetBytes = targetBytes,
+        custom = if (moreOptions && !limitMode) {
+            ItemPlan(ImageParams(maxSide, quality, format), VideoParams(shortSide, bitrate, frameRate))
+        } else {
+            null
+        },
     )
     val plan = remember(state.items, state.calibration, targetBytes, removeAudio) {
         targetBytes?.let { target ->
@@ -120,7 +141,7 @@ fun SetupScreen(
         state.items.associate { it.uri to SizeEstimator.estimate(it, settings, state.calibration) }
     }
     val estimatedTotal = estimates.values.sum()
-    val shownPlan = plan?.items?.firstOrNull() ?: settings.preset.plan
+    val shownPlan = plan?.items?.firstOrNull() ?: settings.custom ?: settings.preset.plan
 
     Scaffold(
         topBar = {
@@ -237,7 +258,18 @@ fun SetupScreen(
                     presets.forEachIndexed { index, label ->
                         SegmentedButton(
                             selected = preset == index,
-                            onClick = { preset = index },
+                            onClick = {
+                                preset = index
+                                if (index != LIMIT_INDEX) {
+                                    val p = Preset.entries[index]
+                                    maxSide = p.imageMaxSide
+                                    quality = p.imageQuality
+                                    format = ImageFormat.JPEG
+                                    shortSide = p.videoShortSide
+                                    bitrate = p.videoBitrate
+                                    frameRate = null
+                                }
+                            },
                             shape = SegmentedButtonDefaults.itemShape(index, presets.size),
                         ) { Text(stringResource(label)) }
                     }
@@ -246,6 +278,28 @@ fun SetupScreen(
                 if (limitMode) {
                     Spacer(Modifier.height(12.dp))
                     LimitPicker(limitMb, onChange = { limitMb = it })
+                } else {
+                    TextButton(onClick = { moreOptions = !moreOptions }) {
+                        Text(stringResource(if (moreOptions) R.string.setup_fewer_options else R.string.setup_more_options))
+                    }
+                    if (moreOptions) {
+                        MoreOptions(
+                            showPhotos = photos > 0,
+                            showVideos = videos > 0,
+                            maxSide = maxSide,
+                            onMaxSide = { maxSide = it },
+                            quality = quality,
+                            onQuality = { quality = it },
+                            format = format,
+                            onFormat = { format = it },
+                            shortSide = shortSide,
+                            onShortSide = { shortSide = it },
+                            bitrate = bitrate,
+                            onBitrate = { bitrate = it },
+                            frameRate = frameRate,
+                            onFrameRate = { frameRate = it },
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(8.dp))
@@ -312,6 +366,129 @@ fun SetupScreen(
             )
             Spacer(Modifier.height(8.dp))
         }
+    }
+}
+
+private val PHOTO_SIZES = listOf(640, 800, 1024, 1280, 1600, 1920, 2560, 3200, 4096)
+private val VIDEO_SIZES = listOf(360, 480, 720, 1080)
+private val FRAME_RATES = listOf<Int?>(null, 30, 24)
+private const val MIN_BITRATE = 500_000
+private const val MAX_BITRATE = 8_000_000
+private const val BITRATE_STEP = 250_000
+
+/** Detailed values under the presets (Part 11); each row shows its current value. */
+@Composable
+private fun MoreOptions(
+    showPhotos: Boolean,
+    showVideos: Boolean,
+    maxSide: Int,
+    onMaxSide: (Int) -> Unit,
+    quality: Int,
+    onQuality: (Int) -> Unit,
+    format: ImageFormat,
+    onFormat: (ImageFormat) -> Unit,
+    shortSide: Int,
+    onShortSide: (Int) -> Unit,
+    bitrate: Int,
+    onBitrate: (Int) -> Unit,
+    frameRate: Int?,
+    onFrameRate: (Int?) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .padding(16.dp),
+    ) {
+        if (showPhotos) {
+            Text(stringResource(R.string.options_photos), style = MaterialTheme.typography.titleSmall)
+            OptionLabel(stringResource(R.string.options_max_side), "$maxSide px")
+            val sizeIndex = PHOTO_SIZES.indexOfFirst { it >= maxSide }.let { if (it < 0) PHOTO_SIZES.lastIndex else it }
+            Slider(
+                value = sizeIndex.toFloat(),
+                onValueChange = { onMaxSide(PHOTO_SIZES[it.roundToInt()]) },
+                valueRange = 0f..PHOTO_SIZES.lastIndex.toFloat(),
+                steps = PHOTO_SIZES.size - 2,
+            )
+            if (format != ImageFormat.PNG) {
+                OptionLabel(stringResource(R.string.options_quality), "$quality %")
+                Slider(
+                    value = quality.toFloat(),
+                    onValueChange = { onQuality((it / 5).roundToInt() * 5) },
+                    valueRange = 40f..95f,
+                    steps = 10,
+                )
+            }
+            OptionLabel(stringResource(R.string.options_format), null)
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                ImageFormat.entries.forEachIndexed { index, f ->
+                    SegmentedButton(
+                        selected = format == f,
+                        onClick = { onFormat(f) },
+                        shape = SegmentedButtonDefaults.itemShape(index, ImageFormat.entries.size),
+                    ) { Text(f.label) }
+                }
+            }
+            Text(
+                text = stringResource(
+                    when (format) {
+                        ImageFormat.JPEG -> R.string.options_format_jpg
+                        ImageFormat.WEBP -> R.string.options_format_webp
+                        ImageFormat.PNG -> R.string.options_format_png
+                    },
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
+        if (showPhotos && showVideos) Spacer(Modifier.height(20.dp))
+        if (showVideos) {
+            Text(stringResource(R.string.options_videos), style = MaterialTheme.typography.titleSmall)
+            OptionLabel(stringResource(R.string.options_resolution), null)
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                VIDEO_SIZES.forEachIndexed { index, size ->
+                    SegmentedButton(
+                        selected = shortSide == size,
+                        onClick = { onShortSide(size) },
+                        shape = SegmentedButtonDefaults.itemShape(index, VIDEO_SIZES.size),
+                    ) { Text("${size}p") }
+                }
+            }
+            OptionLabel(
+                stringResource(R.string.options_bitrate),
+                stringResource(R.string.options_bitrate_value, bitrate / 1_000_000f),
+            )
+            Slider(
+                value = bitrate.toFloat(),
+                onValueChange = { onBitrate((it / BITRATE_STEP).roundToInt() * BITRATE_STEP) },
+                valueRange = MIN_BITRATE.toFloat()..MAX_BITRATE.toFloat(),
+            )
+            OptionLabel(stringResource(R.string.options_frame_rate), null)
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                FRAME_RATES.forEachIndexed { index, fps ->
+                    SegmentedButton(
+                        selected = frameRate == fps,
+                        onClick = { onFrameRate(fps) },
+                        shape = SegmentedButtonDefaults.itemShape(index, FRAME_RATES.size),
+                    ) { Text(if (fps == null) stringResource(R.string.options_frame_rate_original) else "$fps fps") }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OptionLabel(label: String, value: String?) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp, bottom = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyMedium)
+        if (value != null) Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
     }
 }
 

@@ -1,5 +1,6 @@
 package cz.mediaoptimizer.domain.estimate
 
+import cz.mediaoptimizer.domain.model.ImageFormat
 import cz.mediaoptimizer.domain.model.ImageParams
 import cz.mediaoptimizer.domain.model.Preset
 import cz.mediaoptimizer.domain.model.VideoParams
@@ -74,5 +75,14 @@ class TargetSizePlannerTest {
         assertEquals(1.0f, SizeEstimator.qualityFactor(80), 0.0001f)
         assertEquals(0.928f, SizeEstimator.qualityFactor(77), 0.0001f)
         assertEquals(0.55f, SizeEstimator.qualityFactor(30), 0.0001f)
+    }
+
+    @Test
+    fun `WebP is estimated smaller than JPG and PNG bigger`() {
+        val jpg = SizeEstimator.estimateImage(4000, 3000, 3_000_000, ImageParams(1920, 80), null)
+        val webp = SizeEstimator.estimateImage(4000, 3000, 3_000_000, ImageParams(1920, 80, ImageFormat.WEBP), null)
+        val png = SizeEstimator.estimateImage(4000, 3000, 3_000_000, ImageParams(1920, 80, ImageFormat.PNG), null)
+        assertEquals(jpg * 0.75, webp.toDouble(), 2.0)
+        assertTrue(png > jpg * 5)
     }
 }

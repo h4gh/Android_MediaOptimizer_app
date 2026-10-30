@@ -5,8 +5,10 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.ImageDecoder
+import android.os.Build
 import androidx.exifinterface.media.ExifInterface
 import cz.mediaoptimizer.domain.model.ConversionSettings
+import cz.mediaoptimizer.domain.model.ImageFormat
 import cz.mediaoptimizer.domain.model.ImageParams
 import cz.mediaoptimizer.domain.model.MediaItem
 import cz.mediaoptimizer.domain.model.Preset
@@ -19,11 +21,11 @@ import kotlin.math.roundToInt
 class ImageProcessor(private val context: Context) {
 
     fun convert(item: MediaItem, params: ImageParams, settings: ConversionSettings, outFile: File) {
-        val bitmap = decodeForJpeg(item, params.maxSide)
+        val bitmap = decode(item, params.maxSide, flattenAlpha = params.format == ImageFormat.JPEG)
         try {
             outFile.outputStream().use { out ->
-                check(bitmap.compress(Bitmap.CompressFormat.JPEG, params.quality, out)) {
-                    "JPEG compression failed"
+                check(bitmap.compress(compressFormat(params.format), params.quality, out)) {
+                    "${params.format.label} compression failed"
                 }
             }
         } finally {
@@ -34,7 +36,7 @@ class ImageProcessor(private val context: Context) {
 
     /** Compresses one photo in memory and returns the JPEG bytes per pixel (for size estimates). */
     fun sampleBytesPerPixel(item: MediaItem, preset: Preset): Float {
-        val bitmap = decodeForJpeg(item, preset.imageMaxSide)
+        val bitmap = decode(item, preset.imageMaxSide, flattenAlpha = true)
         try {
             val counter = CountingOutputStream()
             bitmap.compress(Bitmap.CompressFormat.JPEG, preset.imageQuality, counter)
@@ -44,7 +46,15 @@ class ImageProcessor(private val context: Context) {
         }
     }
 
-    private fun decodeForJpeg(item: MediaItem, maxSide: Int): Bitmap {
+    @Suppress("DEPRECATION")
+    private fun compressFormat(format: ImageFormat) = when (format) {
+        ImageFormat.JPEG -> Bitmap.CompressFormat.JPEG
+        ImageFormat.PNG -> Bitmap.CompressFormat.PNG
+        ImageFormat.WEBP ->
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) Bitmap.CompressFormat.WEBP_LOSSY else Bitmap.CompressFormat.WEBP
+    }
+
+    private fun decode(item: MediaItem, maxSide: Int, flattenAlpha: Boolean): Bitmap {
         val source = ImageDecoder.createSource(context.contentResolver, item.uri)
         val decoded = ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
             val w = info.size.width
@@ -57,7 +67,7 @@ class ImageProcessor(private val context: Context) {
             decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
         }
         // JPEG has no transparency: put transparent PNG/WebP on white instead of black
-        val bitmap = if (decoded.hasAlpha()) {
+        val bitmap = if (flattenAlpha && decoded.hasAlpha()) {
             Bitmap.createBitmap(decoded.width, decoded.height, Bitmap.Config.ARGB_8888).also {
                 Canvas(it).apply {
                     drawColor(Color.WHITE)
