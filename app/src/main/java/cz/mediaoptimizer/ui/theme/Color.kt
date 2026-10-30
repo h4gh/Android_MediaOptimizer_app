@@ -26,3 +26,7 @@ val TealDarkOnContainer = Color(0xFF00201F)
 val TealDarkText = Color(0xFFDDE4E2)
 val TealDarkMuted = Color(0xFFB4C0BE)
 val TealDarkOutline = Color(0xFF3F4948)
+
+// "Saved" highlight
+val TealLightGood = Color(0xFF2E7D32)
+val TealDarkGood = Color(0xFF8BD88F)

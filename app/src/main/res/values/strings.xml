@@ -1,7 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Media Optimizer</string>
-    <string name="hello_title">Hello!</string>
-    <string name="hello_body">The app runs. Next step: app skeleton.</string>
     <string name="version_label">Version %1$s</string>
+    <string name="back">Back</string>
+
+    <string name="home_hero_title">Smaller photos and videos</string>
+    <string name="home_hero_body">Pick photos and videos, choose a size and share light copies. Your originals stay untouched.</string>
+    <string name="home_pick_media">Select media</string>
+
+    <string name="setup_title">Settings</string>
+    <string name="setup_estimate_label">Estimated size · saved</string>
+    <string name="setup_files_placeholder">Selected files will appear here (Part 2)</string>
+    <string name="setup_size_label">Size</string>
+    <string name="preset_small">Small</string>
+    <string name="preset_medium">Medium</string>
+    <string name="preset_large">Large</string>
+    <string name="setup_strip_metadata">Remove location &amp; info</string>
+    <string name="setup_remove_audio">No audio</string>
+    <string name="setup_optimize">Optimize</string>
+
+    <string name="result_title">Done</string>
+    <string name="result_saved_label">You saved</string>
+    <string name="result_before">Before</string>
+    <string name="result_after">After</string>
+    <string name="result_share">Share</string>
+    <string name="result_done">Back to start</string>
 </resources>
