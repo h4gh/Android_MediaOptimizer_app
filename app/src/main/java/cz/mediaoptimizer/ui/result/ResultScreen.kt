@@ -18,6 +18,11 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -26,6 +31,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cz.mediaoptimizer.R
 import cz.mediaoptimizer.data.ShareHelper
+import cz.mediaoptimizer.data.ZipHelper
 import cz.mediaoptimizer.domain.estimate.SizeEstimator
 import cz.mediaoptimizer.domain.model.ConversionResult
 import cz.mediaoptimizer.ui.components.BigPrimaryButton
@@ -34,11 +40,16 @@ import cz.mediaoptimizer.ui.media.ConversionState
 import cz.mediaoptimizer.ui.media.MediaThumbnail
 import cz.mediaoptimizer.ui.theme.HeroNumberStyle
 import cz.mediaoptimizer.ui.theme.LocalGoodColor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun ResultScreen(state: ConversionState, onDone: () -> Unit) {
     BackHandler(onBack = onDone)
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var zipping by remember { mutableStateOf(false) }
     val saved = SizeEstimator.savedPercent(state.beforeBytes, state.afterBytes)
     Scaffold { padding ->
         Column(
@@ -96,6 +107,26 @@ fun ResultScreen(state: ConversionState, onDone: () -> Unit) {
                 },
                 enabled = state.converted.isNotEmpty(),
             )
+            val files = state.converted.mapNotNull { it.outputFile }
+            if (files.size > 1) {
+                Spacer(Modifier.height(8.dp))
+                val zipTitle = stringResource(R.string.result_share_zip)
+                OutlinedButton(
+                    onClick = {
+                        if (zipping) return@OutlinedButton
+                        zipping = true
+                        scope.launch {
+                            val zip = runCatching { withContext(Dispatchers.IO) { ZipHelper.zip(files) } }.getOrNull()
+                            zipping = false
+                            if (zip != null) ShareHelper.share(context, listOf(zip), zipTitle)
+                        }
+                    },
+                    enabled = !zipping,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                ) {
+                    Text(zipTitle)
+                }
+            }
             Spacer(Modifier.height(8.dp))
             OutlinedButton(onClick = onDone, modifier = Modifier.fillMaxWidth().height(52.dp)) {
                 Text(stringResource(R.string.result_done))
