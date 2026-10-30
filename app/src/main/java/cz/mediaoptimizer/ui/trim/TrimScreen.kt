@@ -1,7 +1,6 @@
 package cz.mediaoptimizer.ui.trim
 
 import androidx.annotation.OptIn
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.runtime.mutableLongStateOf
@@ -59,6 +58,7 @@ import cz.mediaoptimizer.domain.model.MediaItem
 import cz.mediaoptimizer.domain.model.TrimRange
 import cz.mediaoptimizer.ui.components.BigPrimaryButton
 import cz.mediaoptimizer.ui.media.formatDuration
+import cz.mediaoptimizer.ui.theme.LocalGoodColor
 import kotlinx.coroutines.delay
 import kotlin.math.min
 
@@ -217,18 +217,15 @@ fun TrimScreen(item: MediaItem, onDone: (TrimRange?) -> Unit, onBack: () -> Unit
                 valueRange = fullRange,
                 track = { sliderState ->
                     // Playhead drawn over the track so it lines up with the marks exactly
-                    val playheadColor = MaterialTheme.colorScheme.onSurface
+                    val playheadColor = LocalGoodColor.current
+                    val outlineColor = MaterialTheme.colorScheme.background
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         SliderDefaults.Track(rangeSliderState = sliderState)
-                        Canvas(Modifier.fillMaxWidth().height(28.dp)) {
+                        // Same height as the track; a thin outline keeps it visible on both track colours
+                        Canvas(Modifier.matchParentSize()) {
                             val x = size.width * (position.toFloat() / duration).coerceIn(0f, 1f)
-                            drawLine(
-                                color = playheadColor,
-                                start = Offset(x, 0f),
-                                end = Offset(x, size.height),
-                                strokeWidth = 3.dp.toPx(),
-                                cap = StrokeCap.Round,
-                            )
+                            drawLine(outlineColor, Offset(x, 0f), Offset(x, size.height), strokeWidth = 7.dp.toPx())
+                            drawLine(playheadColor, Offset(x, 0f), Offset(x, size.height), strokeWidth = 4.dp.toPx())
                         }
                     }
                 },
