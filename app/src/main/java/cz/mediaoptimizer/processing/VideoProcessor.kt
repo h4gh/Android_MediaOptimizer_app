@@ -2,9 +2,11 @@ package cz.mediaoptimizer.processing
 
 import android.content.Context
 import android.media.MediaCodecInfo
+import android.media.MediaMetadataRetriever
 import androidx.annotation.OptIn
 import androidx.media3.common.Effect
 import androidx.media3.common.MimeTypes
+import androidx.media3.container.Mp4LocationData
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.Presentation
 import androidx.media3.transformer.Composition
@@ -38,18 +40,32 @@ class VideoProcessor(private val context: Context) {
         outFile: File,
         onProgress: (Float) -> Unit,
     ) {
+        val location = if (settings.stripMetadata) null else readLocation(item)
         try {
-            export(item, settings, outFile, strict = true, onProgress)
+            export(item, settings, location, outFile, strict = true, onProgress)
         } catch (e: ExportException) {
             // Some phones cannot tone-map HDR to SDR or keep a constant bitrate: retry without both
             outFile.delete()
-            export(item, settings, outFile, strict = false, onProgress)
+            export(item, settings, location, outFile, strict = false, onProgress)
+        }
+    }
+
+    private suspend fun readLocation(item: MediaItem): Mp4LocationData? = withContext(Dispatchers.IO) {
+        val retriever = MediaMetadataRetriever()
+        try {
+            retriever.setDataSource(context, item.uri)
+            VideoMetadataMuxer.parseIso6709(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_LOCATION))
+        } catch (e: Exception) {
+            null
+        } finally {
+            retriever.release()
         }
     }
 
     private suspend fun export(
         item: MediaItem,
         settings: ConversionSettings,
+        location: Mp4LocationData?,
         outFile: File,
         strict: Boolean,
         onProgress: (Float) -> Unit,
@@ -91,7 +107,7 @@ class VideoProcessor(private val context: Context) {
             .setVideoMimeType(MimeTypes.VIDEO_H264)
             .setAudioMimeType(MimeTypes.AUDIO_AAC)
             .setEncoderFactory(encoderFactory)
-            .apply { if (settings.stripMetadata) setMuxerFactory(LocationStrippingMuxer.Factory()) }
+            .setMuxerFactory(VideoMetadataMuxer.Factory(settings.stripMetadata, location))
             .addListener(object : Transformer.Listener {
                 override fun onCompleted(composition: Composition, exportResult: ExportResult) {
                     finished.complete(Unit)
