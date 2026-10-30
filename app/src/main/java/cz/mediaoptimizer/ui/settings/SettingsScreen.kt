@@ -85,7 +85,12 @@ fun SettingsScreen(
             Section(stringResource(R.string.settings_appearance))
             Label(stringResource(R.string.settings_theme))
             Segmented(
-                labels = listOf(R.string.settings_theme_system, R.string.settings_theme_light, R.string.settings_theme_dark)
+                labels = listOf(
+                    R.string.settings_theme_system,
+                    R.string.settings_theme_light,
+                    R.string.settings_theme_dark,
+                    R.string.settings_theme_amoled,
+                )
                     .map { stringResource(it) },
                 selected = settings.themeMode.ordinal,
                 onSelect = { i -> onChange { it.copy(themeMode = ThemeMode.entries[i]) } },

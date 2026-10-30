@@ -157,12 +157,26 @@ fun MediaOptimizerTheme(
     val darkTheme = when (themeMode) {
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
         ThemeMode.LIGHT -> false
-        ThemeMode.DARK -> true
+        ThemeMode.DARK, ThemeMode.AMOLED -> true
+    }
+    val scheme = colorSchemeFor(color, darkTheme, LocalContext.current).let {
+        if (themeMode == ThemeMode.AMOLED) {
+            it.copy(
+                background = Color.Black,
+                surface = Color.Black,
+                surfaceVariant = AmoledSurfaceVariant,
+                surfaceContainer = AmoledSurfaceContainer,
+                surfaceContainerLow = Color.Black,
+                surfaceContainerHigh = AmoledSurfaceContainer,
+            )
+        } else {
+            it
+        }
     }
     val good: Color = if (darkTheme) TealDarkGood else TealLightGood
     CompositionLocalProvider(LocalGoodColor provides good) {
         MaterialTheme(
-            colorScheme = colorSchemeFor(color, darkTheme, LocalContext.current),
+            colorScheme = scheme,
             typography = AppTypography,
             shapes = AppShapes,
             content = content,

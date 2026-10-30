@@ -6,7 +6,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-enum class ThemeMode { SYSTEM, LIGHT, DARK }
+/** AMOLED = dark with pure black backgrounds (saves battery on OLED screens). */
+enum class ThemeMode { SYSTEM, LIGHT, DARK, AMOLED }
 
 enum class AppColor { TEAL, TANGERINE, COBALT, WALLPAPER }
 

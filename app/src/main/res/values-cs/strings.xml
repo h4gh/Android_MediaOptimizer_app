@@ -103,4 +103,5 @@
     <string name="settings_defaults">Výchozí hodnoty</string>
     <string name="settings_default_size">Velikost</string>
     <string name="settings_strip_hint">Platí při každém spuštění; u každé dávky to jde ještě změnit.</string>
+    <string name="settings_theme_amoled">AMOLED</string>
 </resources>

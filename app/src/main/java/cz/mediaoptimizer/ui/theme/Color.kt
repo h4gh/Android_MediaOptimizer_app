@@ -85,3 +85,7 @@ val CobaltDarkText = Color(0xFFE2E2E9)
 val CobaltDarkMuted = Color(0xFFC5C6D0)
 val CobaltDarkOutline = Color(0xFF44464F)
 val CobaltDarkSelected = Color(0xFF213A7A)
+
+// AMOLED: pure black backgrounds, slightly lifted panels
+val AmoledSurfaceVariant = Color(0xFF1A1A1A)
+val AmoledSurfaceContainer = Color(0xFF111111)
