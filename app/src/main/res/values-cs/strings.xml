@@ -64,4 +64,12 @@
     <string name="progress_title">Optimalizuji</string>
     <string name="progress_count">%1$d z %2$d souborů</string>
     <string name="cancel">Zrušit</string>
+
+    <string name="setup_trim_hint">Klepnutím na video ho oříznete</string>
+    <string name="trim_title">Oříznout video</string>
+    <string name="trim_play">▶ Přehrát</string>
+    <string name="trim_pause">⏸ Pauza</string>
+    <string name="trim_reset">Celé video</string>
+    <string name="trim_done">Hotovo</string>
+    <string name="trim_length">Délka %1$s</string>
 </resources>

@@ -49,7 +49,7 @@ fun MediaThumbnail(item: MediaItem, modifier: Modifier = Modifier) {
         }
         if (item.type == MediaType.VIDEO) {
             Text(
-                text = "▶ " + formatDuration(item.durationMs ?: 0),
+                text = (if (item.trim != null) "✂ " else "▶ ") + formatDuration(item.effectiveDurationMs),
                 style = MaterialTheme.typography.labelSmall,
                 color = Color.White,
                 modifier = Modifier

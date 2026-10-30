@@ -84,6 +84,7 @@ fun SetupScreen(
     state: MediaSelectionState,
     onRemove: (MediaItem) -> Unit,
     onAdd: (List<Uri>) -> Unit,
+    onTrim: (MediaItem) -> Unit,
     onBack: () -> Unit,
     onOptimize: (ConversionSettings) -> Unit,
 ) {
@@ -200,7 +201,12 @@ fun SetupScreen(
                 } else {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(state.items, key = { it.uri.toString() }) { item ->
-                            MediaTile(item, estimates[item.uri] ?: 0, onRemove = { onRemove(item) })
+                            MediaTile(
+                                item,
+                                estimates[item.uri] ?: 0,
+                                onRemove = { onRemove(item) },
+                                onClick = { onTrim(item) }.takeIf { item.type == MediaType.VIDEO },
+                            )
                         }
                         item(key = "add") {
                             AddTile(
@@ -213,6 +219,15 @@ fun SetupScreen(
                             )
                         }
                     }
+                }
+
+                if (videos > 0) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.setup_trim_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
 
                 Spacer(Modifier.height(24.dp))
@@ -365,11 +380,16 @@ private fun AddTile(loading: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun MediaTile(item: MediaItem, estimate: Long, onRemove: () -> Unit) {
+private fun MediaTile(item: MediaItem, estimate: Long, onRemove: () -> Unit, onClick: (() -> Unit)?) {
     val context = LocalContext.current
     Column(Modifier.width(88.dp)) {
         Box {
-            MediaThumbnail(item, Modifier.size(88.dp))
+            MediaThumbnail(
+                item,
+                Modifier
+                    .size(88.dp)
+                    .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+            )
             FilledIconButton(
                 onClick = onRemove,
                 modifier = Modifier

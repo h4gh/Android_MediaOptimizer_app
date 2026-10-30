@@ -1,23 +1,29 @@
 package cz.mediaoptimizer.ui.navigation
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import cz.mediaoptimizer.ui.home.HomeScreen
 import cz.mediaoptimizer.ui.media.MediaViewModel
 import cz.mediaoptimizer.ui.progress.ProgressScreen
 import cz.mediaoptimizer.ui.result.ResultScreen
 import cz.mediaoptimizer.ui.setup.SetupScreen
+import cz.mediaoptimizer.ui.trim.TrimScreen
 
 object Routes {
     const val HOME = "home"
     const val SETUP = "setup"
     const val PROGRESS = "progress"
     const val RESULT = "result"
+    const val TRIM = "trim/{uri}"
+    fun trim(uri: Uri) = "trim/" + Uri.encode(uri.toString())
 }
 
 @Composable
@@ -50,12 +56,29 @@ fun AppNavHost(media: MediaViewModel) {
                 state = state,
                 onRemove = media::remove,
                 onAdd = media::add,
+                onTrim = { nav.navigate(Routes.trim(it.uri)) },
                 onBack = { nav.popBackStack() },
                 onOptimize = { settings ->
                     media.convert(settings)
                     nav.navigate(Routes.PROGRESS)
                 },
             )
+        }
+        composable(Routes.TRIM, arguments = listOf(navArgument("uri") { type = NavType.StringType })) { entry ->
+            val uri = entry.arguments?.getString("uri")
+            val item = state.items.find { it.uri.toString() == uri }
+            if (item == null) {
+                LaunchedEffect(Unit) { nav.popBackStack() }
+            } else {
+                TrimScreen(
+                    item = item,
+                    onDone = { trim ->
+                        media.setTrim(item.uri, trim)
+                        nav.popBackStack()
+                    },
+                    onBack = { nav.popBackStack() },
+                )
+            }
         }
         composable(Routes.PROGRESS) {
             LaunchedEffect(conversion.finished) {

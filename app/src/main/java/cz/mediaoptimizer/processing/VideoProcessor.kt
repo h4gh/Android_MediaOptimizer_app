@@ -86,7 +86,20 @@ class VideoProcessor(private val context: Context) {
                 add(Presentation.createForHeight(height / 2 * 2))
             }
         }
-        val edited = EditedMediaItem.Builder(androidx.media3.common.MediaItem.fromUri(item.uri))
+        val source = androidx.media3.common.MediaItem.Builder()
+            .setUri(item.uri)
+            .apply {
+                item.trim?.let { trim ->
+                    setClippingConfiguration(
+                        androidx.media3.common.MediaItem.ClippingConfiguration.Builder()
+                            .setStartPositionMs(trim.startMs)
+                            .setEndPositionMs(trim.endMs)
+                            .build(),
+                    )
+                }
+            }
+            .build()
+        val edited = EditedMediaItem.Builder(source)
             .setRemoveAudio(settings.removeAudio)
             .setEffects(Effects(emptyList(), videoEffects))
             .build()

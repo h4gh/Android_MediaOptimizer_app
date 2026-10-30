@@ -15,6 +15,7 @@ import cz.mediaoptimizer.domain.model.ItemPlan
 import cz.mediaoptimizer.domain.model.MediaItem
 import cz.mediaoptimizer.domain.model.MediaType
 import cz.mediaoptimizer.domain.model.Preset
+import cz.mediaoptimizer.domain.model.TrimRange
 import cz.mediaoptimizer.processing.ImageProcessor
 import cz.mediaoptimizer.processing.ConversionQueue
 import kotlinx.coroutines.Dispatchers
@@ -32,7 +33,7 @@ fun MediaItem.plannerSource() = TargetSizePlanner.Source(
     width = width,
     height = height,
     sourceBytes = sizeBytes,
-    durationMs = durationMs ?: 0,
+    durationMs = effectiveDurationMs,
 )
 
 data class MediaSelectionState(
@@ -146,6 +147,11 @@ class MediaViewModel(app: Application) : AndroidViewModel(app) {
             val calibration = PhotoCalibration(measured, sourceDensity)
             if (id == selectionId) _state.update { it.copy(calibration = calibration) }
         }
+    }
+
+    /** Sets the part of a video to keep; null keeps the whole video. */
+    fun setTrim(uri: Uri, trim: TrimRange?) {
+        _state.update { s -> s.copy(items = s.items.map { if (it.uri == uri) it.copy(trim = trim) else it }) }
     }
 
     fun remove(item: MediaItem) {

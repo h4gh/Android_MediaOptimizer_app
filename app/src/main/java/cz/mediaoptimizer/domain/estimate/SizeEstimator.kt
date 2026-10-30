@@ -95,7 +95,7 @@ object SizeEstimator {
     fun estimate(item: MediaItem, plan: ItemPlan, removeAudio: Boolean, calibration: PhotoCalibration?): Long =
         when (item.type) {
             MediaType.IMAGE -> estimateImage(item.width, item.height, item.sizeBytes, plan.image, calibration)
-            MediaType.VIDEO -> estimateVideo(item.durationMs ?: 0, plan.video.bitrate, removeAudio)
+            MediaType.VIDEO -> estimateVideo(item.effectiveDurationMs, plan.video.bitrate, removeAudio)
         }
 
     /**
@@ -124,7 +124,7 @@ object SizeEstimator {
                 settings.preset,
                 photoBytesPerPixel(settings.preset, item.sizeBytes, item.width, item.height, calibration),
             )
-            MediaType.VIDEO -> estimateVideo(item.durationMs ?: 0, settings.preset, settings.removeAudio)
+            MediaType.VIDEO -> estimateVideo(item.effectiveDurationMs, settings.preset, settings.removeAudio)
         }
 
     /** Percentage saved, 0..100 (negative would mean the copy is bigger). */
