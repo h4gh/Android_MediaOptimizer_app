@@ -48,6 +48,7 @@
     <string name="result_metadata_removed">📍 Poloha a údaje o fotoaparátu odstraněny</string>
     <string name="result_after">Po</string>
     <string name="result_share">Sdílet</string>
+    <string name="result_zip_mail_text">V příloze: %1$s (souborů: %2$d, %3$s)</string>
     <string name="result_share_zip">Sdílet jako ZIP</string>
     <string name="result_done">Zpět na začátek</string>
     <string name="result_video_later">Videa budou podporována brzy</string>

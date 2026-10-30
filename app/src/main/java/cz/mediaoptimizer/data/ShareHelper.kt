@@ -11,7 +11,13 @@ import java.io.File
 /** Opens the Android share sheet for converted files. */
 object ShareHelper {
 
-    fun share(context: Context, files: List<File>, chooserTitle: String) {
+    fun share(
+        context: Context,
+        files: List<File>,
+        chooserTitle: String,
+        subject: String? = null,
+        text: String? = null,
+    ) {
         if (files.isEmpty()) return
         val authority = "${context.packageName}.files"
         val uris = files.map { FileProvider.getUriForFile(context, authority, it) }
@@ -28,6 +34,8 @@ object ShareHelper {
             Intent(Intent.ACTION_SEND_MULTIPLE).putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList<Uri>(uris))
         }.apply {
             setType(type)
+            subject?.let { putExtra(Intent.EXTRA_SUBJECT, it) }
+            text?.let { putExtra(Intent.EXTRA_TEXT, it) }
             clipData = ClipData.newRawUri(null, uris.first()).also { clip ->
                 uris.drop(1).forEach { clip.addItem(ClipData.Item(it)) }
             }

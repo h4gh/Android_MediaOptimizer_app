@@ -118,7 +118,15 @@ fun ResultScreen(state: ConversionState, onDone: () -> Unit) {
                         scope.launch {
                             val zip = runCatching { withContext(Dispatchers.IO) { ZipHelper.zip(files) } }.getOrNull()
                             zipping = false
-                            if (zip != null) ShareHelper.share(context, listOf(zip), zipTitle)
+                            if (zip != null) {
+                                val body = context.getString(
+                                    R.string.result_zip_mail_text,
+                                    zip.name,
+                                    files.size,
+                                    Formatter.formatShortFileSize(context, zip.length()),
+                                )
+                                ShareHelper.share(context, listOf(zip), zipTitle, subject = zip.name, text = body)
+                            }
                         }
                     },
                     enabled = !zipping,
